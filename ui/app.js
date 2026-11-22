@@ -905,14 +905,46 @@ export function folderButton(getStart, onPick, title = 'Choose folder', label = 
 // "Import project": a folder you already have (one film, a folder of films, finished videos or a Remotion project)
 // becomes a watched folder of the right type; the server decides which and says what it added
 function importButton() {
-  const b = folderButton(() => '', async (folder) => {
+  return h('button', { title: 'Add projects you already have: your Claude Code projects, or any folder', onclick: () => openImportDialog() }, ic('folder', 'Import project'));
+}
+// "Import project": the folders you worked in with Claude Code, newest first, each with Add; or any other folder
+const KIND_LABEL = { remotion: 'Remotion project', code: 'film project', films: n => `${n} film folder${n === 1 ? '' : 's'} inside`, videos: n => `${n} video${n === 1 ? '' : 's'}`, empty: 'no films found yet' };
+async function openImportDialog() {
+  const list = h('div', { class: 'imp-list' }, h('div', { class: 'dim', style: { padding: '14px 4px' } }, 'Looking for your Claude Code projects…'));
+  const bg = h('div', { class: 'modal-bg' });
+  const close = () => { bg.remove(); document.removeEventListener('keydown', esc); };
+  const esc = e => { if (e.key === 'Escape') close(); };
+  const add = async (folder, btn) => {
+    if (btn) { btn.disabled = true; btn.replaceChildren(...[].concat(ic('hourglass', 'Adding…'))); }
     try {
       const r = await api('/api/import', { method: 'POST', body: { path: folder } });
       toast(r.message + (r.added ? ' Scanning…' : ''));
       if (r.added) markUserScan();
-    } catch (err) { toast('Could not import: ' + err.message, true); }
-  }, 'Choose a project folder to import', 'Import project');
-  b.classList.remove('ghost');
-  b.title = 'Add a project you already have: a film folder, a folder of films, a Remotion project or a folder of videos';
-  return b;
+      if (btn) { btn.classList.remove('primary'); btn.replaceChildren(...[].concat(ic('check', r.added ? 'Added' : 'Already here'))); }
+    } catch (err) { toast('Could not import: ' + err.message, true); if (btn) { btn.disabled = false; btn.replaceChildren('Add'); } }
+  };
+  const other = folderButton(() => '', folder => add(folder, null), 'Choose a project folder to import', 'Choose another folder…');
+  other.classList.remove('ghost');
+  const box = h('div', { class: 'modal imp-modal', role: 'dialog', 'aria-label': 'Import project' },
+    h('h1', {}, 'Import project'),
+    h('p', { class: 'sub' }, `Your ${agentName()} Code projects, the most recent first. Add one and its videos and films show up on the Films page.`),
+    list,
+    h('div', { class: 'row', style: { marginTop: '14px' } }, other, h('span', { class: 'spacer', style: { flex: 1 } }), h('button', { onclick: close }, 'Close')));
+  bg.append(box);
+  bg.addEventListener('click', e => { if (e.target === bg) close(); });
+  document.addEventListener('keydown', esc);
+  document.body.append(bg);
+  let ps = [];
+  try { ps = (await api('/api/claude-projects')).projects || []; } catch (err) { list.replaceChildren(h('div', { class: 'red', style: { padding: '14px 4px' } }, 'Could not read the projects: ' + err.message)); return; }
+  if (!ps.length) { list.replaceChildren(h('div', { class: 'dim', style: { padding: '14px 4px' } }, `No ${agentName()} Code projects found on this computer. Choose a folder below.`)); return; }
+  list.replaceChildren(...ps.map(p => {
+    const k = KIND_LABEL[p.kind], kind = typeof k === 'function' ? k(p.kind === 'videos' ? p.videos : p.films) : k || p.kind;
+    const btn = h('button', { class: p.listed ? '' : 'primary sm', disabled: p.listed, onclick: e => add(p.path, e.currentTarget) }, ...(p.listed ? [].concat(ic('check', 'Added')) : ['Add']));
+    return h('div', { class: 'imp-row' },
+      h('div', { class: 'imp-main' },
+        h('div', { class: 'imp-name' }, h('b', {}, p.name), h('span', { class: 'imp-kind' + (p.kind === 'empty' ? ' dim' : '') }, kind)),
+        h('div', { class: 'imp-path mono', title: p.path }, p.path),
+        h('div', { class: 'imp-meta dim' }, `last used ${AGO(p.lastActive)} · ${p.sessions} session${p.sessions === 1 ? '' : 's'}`)),
+      btn);
+  }));
 }

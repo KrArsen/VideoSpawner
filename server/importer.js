@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { config, saveConfig } from './config.js';
-import { isInside, norm } from './util.js';
+import { isInside, norm, HOME, TEMP, HUB_DIR } from './util.js';
 
 const VIDEO = /\.(mp4|mov|webm|mkv)$/i;
 const FILM_FILES = /^(render\.(m?js|py)|index\.html|film\.js|film\.data\.js|videospawner-project\.json|make\.mjs)$/i;
@@ -68,7 +68,42 @@ export function importFolder(folder) {
   return { added: true, type: c.type, kind: c.kind, path: dir, message: typeof m === 'function' ? m(c.kind === 'videos' ? c.videos : c.films) : m };
 }
 
+// The folders the user worked in with Claude Code (~/.claude/projects/<folder>/<session>.jsonl): for each project its
+// working folder (the "cwd" of its newest session), when it was last used, how many sessions it has, what kind of
+// folder it is and whether VideoSpawner already lists it. Only the first 64 KB of one session file per project is read,
+// for the cwd; prompts and answers are not read.
+export function claudeProjects({ home = HOME, limit = 120, skip = [TEMP, HUB_DIR] } = {}) {
+  const base = path.join(home, '.claude', 'projects');
+  let dirs = []; try { dirs = fs.readdirSync(base, { withFileTypes: true }).filter(e => e.isDirectory()); } catch { return []; }
+  const roots = (config().roots || []).filter(r => r.enabled !== false);
+  const seen = new Map();
+  for (const d of dirs) {
+    const dir = path.join(base, d.name);
+    let files = []; try { files = fs.readdirSync(dir).filter(f => f.endsWith('.jsonl')).map(f => { const p = path.join(dir, f); try { return { p, m: fs.statSync(p).mtimeMs }; } catch { return null; } }).filter(Boolean); } catch { continue; }
+    if (!files.length) continue;
+    files.sort((a, b) => b.m - a.m);
+    let cwd = null;
+    for (const f of files.slice(0, 3)) {
+      try {
+        const fd = fs.openSync(f.p, 'r'), buf = Buffer.alloc(64 << 10), n = fs.readSync(fd, buf, 0, buf.length, 0); fs.closeSync(fd);
+        const m = /"cwd":("(?:[^"\\]|\\.)*")/.exec(buf.subarray(0, n).toString('utf8'));
+        if (m) { cwd = JSON.parse(m[1]); break; }
+      } catch { }
+    }
+    if (!cwd || !path.isAbsolute(cwd) || !fs.existsSync(cwd) || path.parse(cwd).root === path.resolve(cwd)) continue;
+    if (skip.some(d => isInside(cwd, d)) || isInside(HUB_DIR, cwd) || norm(cwd) === norm(home)) continue;   // temp, VideoSpawner itself, the home folder
+    if (process.env.SystemRoot && isInside(cwd, process.env.SystemRoot)) continue;   // a chat opened in the Windows folder
+    const key = norm(cwd), prev = seen.get(key);
+    if (prev) { prev.sessions += files.length; prev.lastActive = Math.max(prev.lastActive, files[0].m); continue; }
+    let info; try { info = classifyFolder(cwd); } catch { continue; }
+    const listed = roots.some(r => norm(r.path) === key || (r.type === 'container' && norm(path.dirname(cwd)) === norm(r.path)) || isInside(cwd, r.path));
+    seen.set(key, { path: cwd, name: path.basename(cwd), lastActive: files[0].m, sessions: files.length, type: info.type, kind: info.kind, films: info.films, videos: info.videos, listed });
+  }
+  return [...seen.values()].sort((a, b) => b.lastActive - a.lastActive).slice(0, limit);
+}
+
 export function routes(route, readBody, rescan) {
+  route('GET', '/api/claude-projects', () => ({ projects: claudeProjects() }));
   route('POST', '/api/import', async (req) => {
     const body = await readBody(req);
     const r = importFolder(body?.path);

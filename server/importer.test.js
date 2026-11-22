@@ -25,3 +25,20 @@ test('a folder of film folders is a container; loose videos are a media folder',
   const m = tmp(); put(m, 'one.mp4'); put(m, 'two.mov');
   assert.deepEqual(classifyFolder(m), { type: 'media', kind: 'videos', films: 0, videos: 2 });
 });
+
+test('Claude Code projects: each working folder once, newest first, with its kind', async () => {
+  const { claudeProjects } = await import('./importer.js');
+  // outside the temp folder: claudeProjects skips folders in TEMP (chats opened there are not projects)
+  const out = () => fs.mkdtempSync(path.join(process.cwd(), '.test-tmp', 'cproj-'));
+  const home = tmp(), a = out(), b = out();
+  put(a, 'index.html'); put(b, 'package.json', JSON.stringify({ dependencies: { remotion: '4' } }));
+  const session = (folder, file, cwd, age) => { put(home, `.claude/projects/${folder}/${file}`, JSON.stringify({ type: 'user', cwd, message: { content: 'secret prompt' } }) + '\n'); const f = path.join(home, '.claude', 'projects', folder, file); const t = new Date(Date.now() - age); fs.utimesSync(f, t, t); };
+  session('A', 's1.jsonl', a, 60e3); session('A', 's2.jsonl', a, 120e3);
+  session('B', 's1.jsonl', b, 10e3);
+  session('Gone', 's1.jsonl', path.join(a, 'deleted-folder'), 1e3);
+  const list = claudeProjects({ home, skip: [] });
+  assert.deepEqual(list.map(p => p.path), [b, a]);
+  assert.equal(list[0].kind, 'remotion');
+  assert.equal(list[1].sessions, 2);
+  assert.ok(!JSON.stringify(list).includes('secret prompt'), 'no prompt text');
+});

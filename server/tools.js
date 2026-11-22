@@ -126,7 +126,7 @@ export const TOOLS = {
       return [
         `Live preview ready: "${p.title}" · ${li.page} · ${li.fps} fps · ${TC(li.dur)} (length from: ${li.durFrom}) · sound: ${li.audioName || 'none'}`,
         how === 'window' ? 'The open VideoSpawner window switched to this film.' : how === 'opened' ? 'A VideoSpawner window opened.' : '',
-        'Next: tell the user in 1 sentence (their language) to watch it and press "Send to agent"; then call hub_wait. Fix notes in code, hub_note_update, hub_wait again. Render only if asked.',
+        'Next: tell the user in 1 sentence (their language) to watch it, leave notes and press "Copy for Claude", then paste the prompt here. Then end your turn (no hub_wait). Render only if asked.',
         li.durFrom === 'default' ? 'The film length is unknown (60 s assumed): save it with hub_project({set:{render:{env:{DUR:"…"}}}}).' : '',
       ].filter(Boolean).join('\n');
     },

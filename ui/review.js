@@ -882,7 +882,7 @@ export async function reviewPage(page, id, relArg = '') {
   function endTour() {
     if (!tour) return;
     const { ok, again } = tour; tour = null; tourBar.hidden = true; showBefore(false); clearRange();   // the range was only for checking
-    toast(`Review finished: ${ok} approved${again ? `, ${again} still there — use "Send to ${agentName()}" to send them back` : ''}.`);
+    toast(`Review finished: ${ok} approved${again ? `, ${again} still there — use "Copy for ${agentName()}" and paste them into the chat` : ''}.`);
   }
 
   // notes changed elsewhere (pictures ready, Claude's replies, another window): merge without reloading the list

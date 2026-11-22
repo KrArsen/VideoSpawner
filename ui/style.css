@@ -868,3 +868,16 @@ button.accent-outline:hover { background: var(--accent-a); color: var(--accent-h
 .lo-actions button { padding: 4px 12px; }
 .lo-review { margin: 0 0 14px; border-color: color-mix(in srgb, var(--wait) 45%, transparent); }
 .lo-review .row { gap: 10px; flex-wrap: wrap; }
+
+/* Import project: your Claude Code projects, each with Add */
+.imp-modal { width: min(720px, calc(100vw - 32px)); max-width: none; }
+.imp-list { max-height: min(56vh, 520px); overflow-y: auto; border: 1px solid var(--line2); border-radius: var(--r3); background: var(--s1); }
+.imp-row { display: flex; align-items: center; gap: 14px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.imp-row:last-child { border-bottom: 0; }
+.imp-row:hover { background: var(--s2); }
+.imp-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.imp-name { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+.imp-name b { font: 600 15px var(--display); }
+.imp-kind { font-size: 12px; color: var(--brand); white-space: nowrap; }
+.imp-path { font-size: 11.5px; color: var(--t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.imp-meta { font-size: 11.5px; }

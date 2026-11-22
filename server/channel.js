@@ -235,6 +235,18 @@ export function sendNotes(p, ids) {
   return { count: notes.length, ids: notes.map(n => n.id), waiting };
 }
 
+// "Copy for Claude": the user pastes the notes into the agent's chat themself. The notes count as sent (the button
+// counts only new ones) but nothing goes to the inbox, so a waiting agent does not get them a second time.
+// ids given = copy exactly those again (already sent ones too).
+export function copyNotes(p, ids) {
+  const want = Array.isArray(ids) && ids.length ? new Set(ids.map(Number)) : null;
+  const notes = notesApi.list(p).filter(n => isOpenNote(n) && (want ? want.has(n.id) : !n.sentAt));
+  if (!notes.length) return { count: 0, ids: [], text: '' };
+  const fresh = notes.filter(n => !n.sentAt).map(n => n.id);
+  if (fresh.length) notesApi.markSent(p, fresh);
+  return { count: notes.length, ids: notes.map(n => n.id), text: notesApi.prompt(p, notes.map(n => n.id)) };
+}
+
 // ---------- the film's channel for the UI (drawer, Plan tab, notes panel)
 export function state(p) {
   const book = readPlan(p), plan = book.versions.at(-1) || null, qs = readQuestions(p).list;
@@ -266,6 +278,7 @@ export function routes(route, readBody, { project, fileFor = () => null, fps = (
   route('POST', '/api/project/:id/plan/scene/:n/note', async (req, url, { id, n }) => { const p = need(id), b = await readBody(req); return sceneNote(p, b.v, n, b.text, { file: fileFor(p), fps: fps(p) }); });
   route('POST', '/api/project/:id/question/:qid/answer', async (req, url, { id, qid }) => answer(need(id), qid, await readBody(req)));
   route('POST', '/api/project/:id/notes/send', async (req, url, { id }) => { const b = await readBody(req); return sendNotes(need(id), b.ids); });
+  route('POST', '/api/project/:id/notes/copy', async (req, url, { id }) => { const b = await readBody(req); return copyNotes(need(id), b.ids); });
   route('GET', '/api/project/:id/question/:qid/image/:i', (req, url, { id, qid, i }, res) => {
     const p = need(id), q = readQuestions(p).list.find(x => x.id === qid), im = q?.options?.[+i]?.image ? questionImage(p, q.options[+i].image) : null;
     if (!im) { res.writeHead(404); return res.end(); }

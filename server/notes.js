@@ -250,13 +250,21 @@ export function bulk(p, action, ids) {
   } else throw Object.assign(new Error('action: approve | remove'), { code: 400 });
 }
 
-// the short message the user pastes into the chat ("Send to Claude")
+// The prompt the user pastes into the agent's chat ("Copy for Claude"). It carries the notes themselves (time, frame,
+// text, close-up picture), so the agent can act at once without calling hub_notes first: one tool call fewer.
+const TCN = s => { s = +s || 0; const m = Math.floor(s / 60), r = s - m * 60; return `${m}:${r.toFixed(2).padStart(5, '0')}`; };
 export function prompt(p, ids) {
   const open = list(p).filter(n => ids ? ids.includes(n.id) : isOpenNote(n));
-  return `VideoSpawner: ${open.length} note${open.length === 1 ? '' : 's'} on "${p.title || p.name}" (${open.map(n => '#' + n.id).join(', ')}).\n`
-    + `Project folder: ${p.path}\n`
-    + `Get them with hub_notes({project: ${JSON.stringify(p.path)}}), fix the code (the open live preview reloads itself) and mark each note with hub_note_update. DO NOT RENDER: render only with hub_render when the user asks for a render. `
-    + `If this chat does not know the project yet, first read the STATE.md / CLAUDE.md / README files in its folder.`;
+  const lines = [`VideoSpawner: ${open.length} note${open.length === 1 ? '' : 's'} on "${p.title || p.name}" — folder ${p.path}`];
+  for (const n of open) {
+    const when = n.t2 != null ? `${TCN(n.t)}–${TCN(n.t2)}` : `${TCN(n.t)}${n.frame != null ? ` (frame ${n.frame})` : ''}`;
+    const where = n.file === '~live' ? 'live preview' : n.file ? 'video ' + path.basename(n.file) : '';
+    lines.push(`#${n.id} ${when}${where ? ' · ' + where : ''}${n.status === 'reopened' ? ' · STILL THERE after the last fix' : ''}: ${n.text ? `"${n.text}"` : '(see the picture)'}`);
+    const pic = n.images?.crop || n.images?.annotated || n.images?.frame;
+    if (pic) lines.push(`   picture: ${pic}`);
+  }
+  lines.push('', 'Open each picture, fix the cause in the code (the open preview reloads itself), then mark each note with hub_note_update(status "fixed", a 1-sentence reply). Do not render unless I ask.');
+  return lines.join('\n');
 }
 
 export function routes(route, readBody) {

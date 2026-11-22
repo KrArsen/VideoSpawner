@@ -16,7 +16,7 @@ export function createNotesPanel(ctx) {
   const filterSel = h('select', { onchange: () => render() }, h('option', { value: 'open' }, 'Open'), h('option', { value: 'fixed' }, 'Fixed'), h('option', { value: 'all' }, 'All'), h('option', { value: 'file' }, 'This version'));
   const composerBox = h('div', {}), list = h('div', { class: 'rv2-list' });
   const draftsBox = h('div', { class: 'rv2-drafts', hidden: true });
-  const sendBtn = h('button', { class: 'primary', onclick: send });
+  const sendBtn = h('button', { class: 'primary', onclick: () => copyForAgent() });
   // under the button: where sent notes are (straight to a waiting agent, or queued) and the old copy-paste fallback
   const sendHint = h('div', { class: 'rv2-sendhint' });
   const tourBtn = h('button', { class: 'tourbtn', hidden: true, title: `Review ${agentName()}\'s fixes one by one: before/after, approve or mark as still there`, onclick: () => ctx.startTour() });
@@ -204,16 +204,33 @@ export function createNotesPanel(ctx) {
     else if (els.length !== list.children.length || els.some((e, i) => list.children[i] !== e)) list.replaceChildren(...els);
     if (topChanged) list.scrollTop = 0;
     const open = notes.filter(n => ['open', 'reopened'].includes(n.status)).length, unsent = unsentNotes(notes).length;
-    const sendText = `Send to ${agentName()} (${unsent})`;
-    if (sendBtn.dataset.label !== sendText) { sendBtn.dataset.label = sendText; sendBtn.replaceChildren(...ic('send', sendText)); }
+    const sendText = `Copy for ${agentName()} (${unsent})`;
+    if (sendBtn.dataset.label !== sendText) { sendBtn.dataset.label = sendText; sendBtn.replaceChildren(...ic('doc', sendText)); sendBtn.title = `Copies a prompt with these notes; paste it into ${agentName()}'s chat (Ctrl+V) and send it yourself`; }
     sendBtn.disabled = !unsent; ctx.onCount?.(open);
     drawHint();
     const fixed = notes.filter(n => n.status === 'fixed').length;
     tourBtn.hidden = !fixed; tourBtn.replaceChildren(...ic('check', `Check fixes (${fixed})`));
     if (!oldAsked && notes.length) refreshOld(); else drawOld();
   }
-  // "Send to agent": the unsent open notes go to the film's inbox; an agent waiting in hub_wait gets them at once,
-  // otherwise its next hub_wait / hub_notes picks them up
+  // "Copy for Claude" (the main button): a prompt with the new notes goes to the clipboard; the user pastes it into the
+  // agent's chat and sends it. Nothing is delivered on its own. ids = copy exactly those again.
+  async function copyForAgent(ids) {
+    if (!ids && sendBtn.disabled) return;
+    if (!ids) sendBtn.disabled = true;
+    try {
+      const r = await api(`/api/project/${ctx.projectId}/notes/copy`, { method: 'POST', body: ids?.length ? { ids } : {} });
+      if (!r.count) { toast('No new notes to copy.'); return; }
+      const now = new Date().toISOString();
+      for (const n of ctx.notes()) if (r.ids.includes(n.id) && !n.sentAt) n.sentAt = now;
+      let copied = false; try { await navigator.clipboard.writeText(r.text); copied = true; } catch { }
+      if (copied) toast(`Copied ${r.count} note${r.count === 1 ? '' : 's'}. Paste into ${agentName()}'s chat (Ctrl+V) and press Enter.`);
+      else await confirmBox(`Paste this into ${agentName()}'s chat`, h('textarea', { style: { width: '100%', minHeight: '160px' }, value: r.text }), 'Done');
+      ctx.changed();
+    } catch (e) { toast('Could not copy: ' + e.message, true); }
+    finally { render(); }
+  }
+  // "Send straight to Claude" (secondary, only while an agent waits in hub_wait): the notes go to the film's inbox and
+  // the waiting agent gets them at once
   async function send() {
     if (sendBtn.disabled) return;
     sendBtn.disabled = true;
@@ -227,20 +244,15 @@ export function createNotesPanel(ctx) {
       refreshChannel(); ctx.changed();
     } catch (e) { toast('Could not send: ' + e.message, true); render(); }
   }
-  // the old way, kept as a fallback: a message to paste into the agent's chat
-  async function copyMessage(ids) {
-    const { text } = await api(`/api/project/${ctx.projectId}/prompt`, { method: 'POST', body: ids?.length ? { ids } : {} });
-    try { await navigator.clipboard.writeText(text); toast('Message copied to the clipboard. Paste it into the agent’s chat.'); }
-    catch { await confirmBox('Paste into chat', h('textarea', { style: { width: '100%', minHeight: '90px' } }, text), 'OK'); }
-  }
   function drawHint() {
     const notes = ctx.notes(), chan = filmChannel(), waiting = agentWaiting(chan);
     const queued = notes.filter(n => n.sentAt && ['open', 'reopened'].includes(n.status)), unsent = unsentNotes(notes);
-    const copy = ids => h('a', { href: '#', class: 'copylink', title: 'Copy a short message for the agent’s chat (the old way)', onclick: e => { e.preventDefault(); copyMessage(ids); } }, 'Copy as message');
+    const again = ids => h('a', { href: '#', class: 'copylink', title: 'Copy the prompt with these notes again', onclick: e => { e.preventDefault(); copyForAgent(ids); } }, 'Copy again');
+    const direct = h('a', { href: '#', class: 'copylink', title: 'Skip the chat: the waiting agent gets the notes at once', onclick: e => { e.preventDefault(); send(); } }, 'send straight to it');
     const who = chan?.waiting?.agent || agentName();
-    const kids = waiting ? [h('span', { class: 'live' }, icon('dot'), `${who} is waiting: notes go straight to it.`)]
-      : queued.length ? [h('span', {}, `${queued.length} sent, waiting for ${agentName()} to pick ${queued.length === 1 ? 'it' : 'them'} up · `), copy(queued.map(n => n.id))]
-      : unsent.length ? [h('span', {}, `${agentName()} gets them the next time it checks VideoSpawner · `), copy(unsent.map(n => n.id))]
+    const kids = waiting && unsent.length ? [h('span', { class: 'live' }, icon('dot'), `${who} is waiting · `), direct]
+      : queued.length ? [h('span', {}, `${queued.length} copied or sent · `), again(queued.map(n => n.id))]
+      : unsent.length ? [h('span', {}, `Copies a prompt; you paste it into ${agentName()}'s chat.`)]
       : [];
     sendHint.replaceChildren(...kids); sendHint.hidden = !kids.length;
   }

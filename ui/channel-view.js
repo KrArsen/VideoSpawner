@@ -36,7 +36,7 @@ export function waitLine(chan, agent = 'The agent') {
   const parts = [];
   if (qs) parts.push(qs === 1 ? 'an answer to its question' : `answers to ${qs} questions`);
   if (plan) parts.push(`your OK on plan v${chan.plan.v}`);
-  if (!parts.length) parts.push('your notes: press “Send to agent” when you are ready');
+  if (!parts.length) parts.push('your notes: press “Copy for Claude” and paste them into the chat');
   const list = parts.length > 1 ? parts.slice(0, -1).join(', ') + ' and ' + parts.at(-1) : parts[0];
   return { lead: waiting ? `${who} is waiting for` : `${who} asked for`, text: list, button: qs ? (qs === 1 ? 'Answer the question' : `Answer ${qs} questions`) : 'Open agent', questions: qs };
 }
