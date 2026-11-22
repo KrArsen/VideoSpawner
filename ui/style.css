@@ -890,3 +890,14 @@ button.accent-outline:hover { background: var(--accent-a); color: var(--accent-h
 .rem-row select { min-width: 300px; max-width: 100%; }
 .rem-err { margin-top: 10px; font-size: 12.5px; white-space: pre-wrap; }
 .rem-hint { margin: 10px 0 0; font-size: 12.5px; }
+
+/* Claude chats of a film's folder (Film details) */
+.chats-panel { margin: 0 0 18px; padding: 12px 14px; }
+.chats-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.chats-head b { font: 600 15px var(--display); }
+.chat-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--r2); }
+.chat-row + .chat-row { border-top: 1px solid var(--line); }
+.chat-row.on { background: var(--navy); }
+.chat-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.chat-main .dim { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chat-row button.on { color: var(--brand); border-color: var(--brand-b); background: var(--brand-a); }

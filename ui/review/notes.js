@@ -4,6 +4,7 @@ import { h, api, toast, confirmBox, pill, TC, AGO } from '../app.js';
 import { icon, ic } from '../icons.js';
 import { filmChannel, onFilmChannel, refreshChannel } from '../shell.js';
 import { sentState, unsentNotes, agentWaiting } from '../channel-view.js';
+import { chosenChat } from '../chats.js';
 
 // Element.append prints null/false as text; this skips them like h() does.
 const put = (el, ...kids) => { for (const c of kids.flat(Infinity)) if (c != null && c !== false) el.append(c); return el; };
@@ -222,8 +223,9 @@ export function createNotesPanel(ctx) {
       if (!r.count) { toast('No new notes to copy.'); return; }
       const now = new Date().toISOString();
       for (const n of ctx.notes()) if (r.ids.includes(n.id) && !n.sentAt) n.sentAt = now;
-      let copied = false; try { await navigator.clipboard.writeText(r.text); copied = true; } catch { }
-      if (copied) toast(`Copied ${r.count} note${r.count === 1 ? '' : 's'}. Paste into ${agentName()}'s chat (Ctrl+V) and press Enter.`);
+      const chat = chosenChat(ctx.projectId), text = chat ? `(for the chat "${chat.title || chat.id.slice(0, 8)}")\n` + r.text : r.text;
+      let copied = false; try { await navigator.clipboard.writeText(text); copied = true; } catch { }
+      if (copied) toast(`Copied ${r.count} note${r.count === 1 ? '' : 's'}. Paste into ${chat ? `the chat "${chat.title || chat.id.slice(0, 8)}"` : agentName() + "'s chat"} (Ctrl+V) and press Enter.`);
       else await confirmBox(`Paste this into ${agentName()}'s chat`, h('textarea', { style: { width: '100%', minHeight: '160px' }, value: r.text }), 'Done');
       ctx.changed();
     } catch (e) { toast('Could not copy: ' + e.message, true); }

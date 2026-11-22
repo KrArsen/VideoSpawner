@@ -484,7 +484,7 @@ route('GET', '/api/activity', async () => {
 });
 route('GET', '/api/config', () => ({ ...config(), workspace: baseDir(), capabilities: capabilities(), discovered: discoverRoots(), tools: TOOLS, example: example.info(), integrations: integrations() }));
 example.routes(route, readBody, () => scan());
-importer.routes(route, readBody, () => scan());
+importer.routes(route, readBody, () => scan(), project);
 remotion.routes(route, readBody, { project, createJob: b => jobs.create(b), approveJob: id => jobs.approve(id) });
 notesApi.setLiveFrame((p, t, file) => remotion.still(p, t, file, port));
 route('POST', '/api/config', async (req) => { const body = await readBody(req); const c = saveConfig(body); scan().catch(() => { }); if ('agentActivity' in body) refreshActivity().catch(() => { });

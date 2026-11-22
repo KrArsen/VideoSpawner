@@ -102,7 +102,32 @@ export function claudeProjects({ home = HOME, limit = 120, skip = [TEMP, HUB_DIR
   return [...seen.values()].sort((a, b) => b.lastActive - a.lastActive).slice(0, limit);
 }
 
-export function routes(route, readBody, rescan) {
+// The Claude Code chats that worked in a project's folder (or below it), newest first: id, title (the chat's own
+// name, from its custom-title record), working folder, last use. Read: the first 64 KB of each chat file (cwd) and its
+// last 256 KB (the newest title). Prompt and answer text is never put in the result.
+const slugOf = p => path.resolve(p).replace(/[^a-zA-Z0-9]/g, '-');
+const readAt = (f, from, len) => { const fd = fs.openSync(f, 'r'); try { const b = Buffer.alloc(len), n = fs.readSync(fd, b, 0, len, from); return b.subarray(0, n).toString('utf8'); } finally { fs.closeSync(fd); } };
+const CWD = /"cwd":("(?:[^"\\]|\\.)*")/, TITLE = /"customTitle":("(?:[^"\\]|\\.)*")/g;
+export function projectChats(projectDir, { home = HOME, limit = 30 } = {}) {
+  const base = path.join(home, '.claude', 'projects'), want = slugOf(projectDir).toLowerCase(), out = [];
+  let dirs = []; try { dirs = fs.readdirSync(base, { withFileTypes: true }).filter(e => e.isDirectory() && (e.name.toLowerCase() === want || e.name.toLowerCase().startsWith(want + '-'))); } catch { return []; }
+  for (const d of dirs) {
+    let files = []; try { files = fs.readdirSync(path.join(base, d.name)).filter(f => f.endsWith('.jsonl')); } catch { continue; }
+    for (const name of files) {
+      const f = path.join(base, d.name, name); let st; try { st = fs.statSync(f); } catch { continue; }
+      if (st.size < 200) continue;
+      let cwd = null, title = null;
+      try { const m = CWD.exec(readAt(f, 0, 64 << 10)); if (m) cwd = JSON.parse(m[1]); } catch { }
+      if (!cwd || !(norm(cwd) === norm(projectDir) || isInside(cwd, projectDir))) continue;
+      try { const all = [...readAt(f, Math.max(0, st.size - (256 << 10)), 256 << 10).matchAll(TITLE)]; if (all.length) title = JSON.parse(all[all.length - 1][1]).slice(0, 120); } catch { }
+      out.push({ id: name.replace(/\.jsonl$/, ''), title, cwd, lastActive: st.mtimeMs, sizeKB: Math.round(st.size / 1024) });
+    }
+  }
+  return out.sort((a, b) => b.lastActive - a.lastActive).slice(0, limit);
+}
+
+export function routes(route, readBody, rescan, project = () => null) {
+  route('GET', '/api/project/:id/chats', (req, url, { id }) => { const p = project(id); if (!p) throw Object.assign(new Error('Project not found'), { code: 404 }); return { chats: projectChats(p.path) }; });
   route('GET', '/api/claude-projects', () => ({ projects: claudeProjects() }));
   route('POST', '/api/import', async (req) => {
     const body = await readBody(req);
