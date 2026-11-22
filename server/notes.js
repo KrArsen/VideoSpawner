@@ -125,6 +125,10 @@ async function annotate(frame, strokesPng, region, dir, tag) {
   return res;
 }
 
+// a project whose page the browser cannot photograph (Remotion draws HTML, not one canvas): the hub takes the frame
+// picture itself (remotion.still) and it replaces the one the browser sent
+let liveFrameHook = null;
+export const setLiveFrame = fn => { liveFrameHook = fn; };
 export async function add(p, body) {
   const notes = list(p), seqFile = path.join(vhDir(p), 'notes-seq.json');
   const id = Math.max(notes.reduce((m, n) => Math.max(m, n.id), 0), readJson(seqFile, {}).last || 0) + 1;   // never reused
@@ -135,7 +139,8 @@ export async function add(p, body) {
   const out = p.outputs.find(o => o.rel === body.file) || null;
   const fps = out?.fps || +body.fps || p.render?.fps || 30;
   // a live note's frame comes from the browser: writing it is quick, so it is there right away
-  const liveShot = !out && body.images?.frame ? saveDataUrl(body.images.frame, path.join(dir, tag + '_frame.jpg')) : null;
+  let liveShot = !out && body.images?.frame ? saveDataUrl(body.images.frame, path.join(dir, tag + '_frame.jpg')) : null;
+  if (!out && body.file === '~live' && liveFrameHook) { const f = await liveFrameHook(p, at ?? t, path.join(dir, tag + '_frame.jpg')).catch(() => null); if (f) liveShot = f; }
   const kind = noteKind(body.kind);
   const note = {
     id, t, t2, at, kind: KINDS.includes(kind) ? kind : 'general', layer: typeof body.layer === 'string' && body.layer ? body.layer.slice(0, 24) : null, text: String(body.text || '').trim(),

@@ -12,6 +12,7 @@ import { nowPage } from './now.js';
 import { filesPage } from './files.js';
 import { openFinishDialog, openFinishAll } from './finish.js';
 import { skillsPage } from './skills.js';
+import { remotionPanel } from './remotion.js';
 import { initLeftovers, headline, ruleLine } from './leftovers.js';
 import { workingFilms } from './activity-view.js';
 initShell();   // the rail and top bar exist before anything below writes into them
@@ -390,6 +391,7 @@ async function projectPage(page, id) {
         h('button', { title: 'Measure this film again', onclick: async () => { await api(`/api/project/${id}/rescan`, { method: 'POST' }); render(); } }, ic('refresh', 'Rescan')),
         h('button', { class: 'ghost danger', title: `Remove from the list or send the folder to the ${trashName()}`, onclick: () => removeProject(p, () => { location.hash = '#/'; }) }, ic('trash', 'Remove…')))),
   );
+  const rem = await remotionPanel(id); if (rem) page.append(rem);
   const main = h('div', { class: 'fd-main' }), side = h('aside', { class: 'fd-side' });
   page.append(h('div', { class: 'fd-grid' }, main, side));
 

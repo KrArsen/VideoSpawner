@@ -75,6 +75,7 @@ export function liveCapable(p) {
 // the film's sound: a mix in audio/, else the inputs of render.mux, else any audio file, else the last render's track
 export function audioOf(p, meta) {
   if (meta.live?.audio) { const f = path.resolve(p.path, meta.live.audio); if (fs.existsSync(f)) return f; }
+  if (meta.live && meta.live.audio === false) return null;   // the page has no separate sound (a Remotion composition)
   for (const c of ['audio/mix.wav', 'audio/mix.mp3', 'audio/final.wav', 'audio/master.wav', 'mix.wav', 'audio/mix.m4a']) { const f = path.join(p.path, c); if (fs.existsSync(f)) return f; }
   const mux = meta.render?.mux;
   if (Array.isArray(mux)) for (let i = 0; i < mux.length - 1; i++) if (mux[i] === '-i' && AUDIO.test(mux[i + 1])) { const f = path.resolve(p.path, mux[i + 1]); if (fs.existsSync(f)) return f; }
@@ -86,7 +87,8 @@ export function audioOf(p, meta) {
   return fin?.path || null;
 }
 
-function sizeOf(p, rc, page) {
+function sizeOf(p, rc, page, meta = {}) {
+  if (meta.live?.w && meta.live?.h) return { w: +meta.live.w, h: +meta.live.h };   // set by VideoSpawner (a Remotion composition)
   // the page's own data (otomasyon films: data.js window.DATA = {"width":1080,"height":1920,...})
   if (page) for (const f of ['data.js', 'data.json']) {
     const m = read(path.join(p.path, path.dirname(page), f)).match(/"width"\s*:\s*(\d{3,4})\s*,\s*"height"\s*:\s*(\d{3,4})/);
@@ -123,7 +125,7 @@ export async function liveInfo(p) {
   if (!dur && audio) { try { dur = (await probe(audio)).dur || 0; durFrom = 'audio'; } catch { } }
   if (!dur) { const last = (p.outputs || []).filter(o => o.dur).sort((a, b) => b.mtime - a.mtime)[0]; if (last) { dur = last.dur; durFrom = 'last video'; } }
   if (!dur) { dur = 60; durFrom = 'default'; }
-  const { w, h } = sizeOf(p, rc, page);
+  const { w, h } = sizeOf(p, rc, page, meta);
   return { ok: true, revision: codeRevision(p, { fresh: true }), page, url: `/live/${p.id}/${page.split('/').map(encodeURIComponent).join('/')}`, fps, dur: +(+dur).toFixed(3), durFrom, w, h,
     audio: audio ? '/media?p=' + encodeURIComponent(audio) : null, audioPath: audio, audioName: audio ? path.relative(p.path, audio) : null, chunkSec: rc.chunkSec || null };
 }

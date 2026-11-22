@@ -881,3 +881,12 @@ button.accent-outline:hover { background: var(--accent-a); color: var(--accent-h
 .imp-kind { font-size: 12px; color: var(--brand); white-space: nowrap; }
 .imp-path { font-size: 11.5px; color: var(--t2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .imp-meta { font-size: 11.5px; }
+
+/* A Remotion project on its Film details page */
+.rem-panel { margin: 0 0 18px; padding: 14px 16px; border-color: color-mix(in srgb, var(--brand) 35%, var(--line2)); }
+.rem-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.rem-head b { font: 600 16px var(--display); }
+.rem-badge { font: 600 11px var(--mono); color: var(--brand); background: var(--brand-a); border: 1px solid var(--brand-b); border-radius: var(--r1); padding: 1px 7px; }
+.rem-row select { min-width: 300px; max-width: 100%; }
+.rem-err { margin-top: 10px; font-size: 12.5px; white-space: pre-wrap; }
+.rem-hint { margin: 10px 0 0; font-size: 12.5px; }
