@@ -90,7 +90,7 @@
 
 /* hub sidebar in the editor: a 48 px icon strip (titles as tips); ☰ shows it whole over the page */
 
-.rv2-view { position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #15171c 0%, #0b0c0e 70%); border: 1px solid var(--line); border-radius: var(--r3); }
+.rv2-view { position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #12221b 0%, #060d0a 72%); border: 1px solid var(--line); border-radius: var(--r3); }
 .rv2-view .frame { box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 18px 50px rgba(0,0,0,.6); }
 .zoombox { position: absolute; transform-origin: 0 0; display: flex; gap: 8px; }
 .frame { position: relative; background: #000; flex: none; }
@@ -117,7 +117,7 @@
 .rv2-transport > .spacer { flex: 1 1 0; min-width: 0; }
 .rv2-transport button { white-space: nowrap; }
 .rv2-transport .tbtn { min-width: 30px; height: 28px; padding: 2px 7px; font-variant-numeric: tabular-nums; }
-.rv2-transport .play { width: 34px; height: 34px; border-radius: 50%; background: var(--t1); color: #0b0c0e; font-weight: 700; border: 0; padding: 0; display: grid; place-items: center; }
+.rv2-transport .play { width: 34px; height: 34px; border-radius: 50%; background: var(--t1); color: var(--accent-ink); font-weight: 700; border: 0; padding: 0; display: grid; place-items: center; }
 .rv2-transport .tc { font-family: var(--mono); font-size: 12.5px; height: 28px; text-align: left; background: var(--s0); padding: 2px 8px; }
 .rv2-transport .tp-tcin { width: 230px; height: 28px; box-sizing: border-box; font-family: var(--mono); font-size: 12.5px; padding: 2px 8px; }
 .rv2-transport .tp-tcin.bad { border-color: var(--red); background: var(--red-bg); }
@@ -164,7 +164,7 @@
 .tl2-ms { width: 23px; height: 23px; padding: 0; border-radius: 5px; font: 700 10.5px/1 var(--font); color: var(--muted); background: var(--s3); border: 1px solid var(--border); }
 .tl2-ms:hover:not(:disabled) { color: var(--text); background: var(--s4); }
 .tl2-ms.on { color: var(--accent); background: var(--accent-a); border-color: var(--accent); }
-.tl2-ms.off { color: var(--chg); background: var(--chg-a); border-color: rgba(242,131,107,.45); }
+.tl2-ms.off { color: var(--chg); background: var(--chg-a); border-color: color-mix(in srgb, var(--chg) 45%, transparent); }
 .tl2-ms:disabled { opacity: .35; cursor: not-allowed; }
 .tl2-lvl { display: inline-block; min-width: 38px; height: 21px; padding: 0 4px; box-sizing: border-box; border-radius: 5px; border: 1px solid var(--border); background: var(--s2); font: 600 10.5px/19px var(--font); font-variant-numeric: tabular-nums; text-align: center; color: var(--muted); cursor: ew-resize; user-select: none; touch-action: none; }
 .tl2-lvl:hover, .tl2-lvl.drag { color: var(--text); border-color: var(--accent); }
@@ -188,7 +188,7 @@
 .tl2-ov { background: var(--s0); }
 .tl2-ovcorner { background: var(--panel); border-right: 1px solid var(--border); }
 .tl2-ovtrack { position: relative; overflow: hidden; cursor: pointer; user-select: none; touch-action: none; }
-.tl2-ovwin { position: absolute; top: 1px; bottom: 1px; min-width: 8px; box-sizing: border-box; background: var(--work-a); border: 1px solid rgba(127,168,255,.6); border-radius: 3px; }
+.tl2-ovwin { position: absolute; top: 1px; bottom: 1px; min-width: 8px; box-sizing: border-box; background: var(--work-a); border: 1px solid color-mix(in srgb, var(--work) 60%, transparent); border-radius: 3px; }
 .tl2-ovlab { position: absolute; inset: 0; z-index: 1; font: 9px/12px var(--font); color: var(--muted); text-align: center; white-space: nowrap; pointer-events: none; }
 .tl2-ovhead { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--t1); pointer-events: none; z-index: 2; }
 .tl2-tip { position: fixed; bottom: auto; width: 170px; background: var(--card2); border: 1px solid var(--border2); border-radius: 8px; padding: 5px; font-size: 11.5px; pointer-events: none; z-index: 70; }
@@ -211,7 +211,7 @@
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip { font-size: 12px; padding: 3px 11px; border-radius: 14px; background: transparent; border: 1px solid var(--line2); color: var(--t2); cursor: pointer; font-weight: 500; }
 .chip:hover { color: var(--t1); border-color: var(--line3); }
-.chip.on { background: var(--t1); border-color: var(--t1); color: #0b0c0e; }
+.chip.on { background: var(--t1); border-color: var(--t1); color: var(--accent-ink); }
 /* off-screen cards skip layout and paint; the list is its own layout island */
 .rv2-list { contain: layout paint; }
 /* no content-visibility here: a card kept its remembered height when its lazy picture loaded and overlapped the next one (Oct 27) */
@@ -233,7 +233,7 @@
 .nc .reply b { color: var(--accent); font-weight: 600; }
 .nc .acts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .nc .acts button { padding: 2px 8px; font-size: 11.5px; border-radius: 6px; }
-.rv2-help { position: fixed; inset: 0; background: rgba(4,5,7,.6); display: grid; place-items: center; z-index: 50; }
+.rv2-help { position: fixed; inset: 0; background: rgba(2,9,6,.66); display: grid; place-items: center; z-index: 50; }
 .rv2-help .panel { width: min(640px, 92vw); max-height: 85vh; overflow: auto; }
 .rv2-help .kv { grid-template-columns: 190px 1fr; }
 
@@ -293,7 +293,7 @@
 /* scene editor on the live preview (Oct 28) */
 .sedit-ov { position: absolute; inset: 0; z-index: 6; touch-action: none; outline: 2px solid var(--wait); outline-offset: -2px; }
 .sedit-cv { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.sedit-panel { position: absolute; left: 10px; top: 10px; z-index: 7; width: 330px; max-width: calc(100% - 20px); background: rgba(18,19,23,.95); border: 1px solid var(--line3); border-radius: var(--r3); padding: 9px 10px; display: grid; gap: 7px; font-size: 12.5px; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
+.sedit-panel { position: absolute; left: 10px; top: 10px; z-index: 7; width: 330px; max-width: calc(100% - 20px); background: color-mix(in srgb, var(--s1) 95%, transparent); border: 1px solid var(--line3); border-radius: var(--r3); padding: 9px 10px; display: grid; gap: 7px; font-size: 12.5px; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
 .sedit-head, .sedit-row, .sedit-foot { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .sedit-head select { max-width: 170px; }
 .sedit-row button { padding: 3px 8px; }
@@ -310,7 +310,7 @@
 .sedit-seg .seg { padding: 4px 8px; font-size: 12px; }
 
 /* automatic scan of a live film (Oct 28) */
-.ascan-panel { position: absolute; right: 10px; top: 10px; z-index: 8; width: 400px; max-width: calc(100% - 20px); max-height: calc(100% - 20px); overflow-y: auto; overflow-x: hidden; background: rgba(18,19,23,.95); border: 1px solid var(--line3); border-radius: var(--r3); padding: 9px 10px; display: grid; gap: 7px; font-size: 12.5px; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
+.ascan-panel { position: absolute; right: 10px; top: 10px; z-index: 8; width: 400px; max-width: calc(100% - 20px); max-height: calc(100% - 20px); overflow-y: auto; overflow-x: hidden; background: color-mix(in srgb, var(--s1) 95%, transparent); border: 1px solid var(--line3); border-radius: var(--r3); padding: 9px 10px; display: grid; gap: 7px; font-size: 12.5px; box-shadow: 0 6px 24px rgba(0,0,0,.45); }
 .ascan-head, .ascan-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .ascan-row button { padding: 3px 8px; }
 .ascan-hint, .ascan-sum { font-size: 11.5px; }
@@ -380,7 +380,7 @@
 .lib-hint { font-size: 11px; }
 
 /* ---- Nov 8 look pass: calmer, clearer controls for people who are not editors ---- */
-.vh-tip { position: fixed; z-index: 9999; max-width: 300px; padding: 6px 9px; border-radius: 8px; background: #f0f1f3; color: #121316; font-size: 12.5px; line-height: 1.35; box-shadow: 0 6px 22px rgba(0,0,0,.5); pointer-events: none; white-space: normal; }
+.vh-tip { position: fixed; z-index: 9999; max-width: 300px; padding: 6px 9px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font-size: 12.5px; line-height: 1.35; box-shadow: 0 6px 22px rgba(0,0,0,.5); pointer-events: none; white-space: normal; }
 .rv2 button { transition: background-color .12s, border-color .12s, color .12s, filter .12s; }
 .rv2 button:focus-visible, .rv2 select:focus-visible, .rv2 input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .rv2 select { border-radius: 8px; }
@@ -403,7 +403,7 @@
 @container (max-height: 500px) { .rv2-tools .tb .tl { display: none; } .rv2-tools .tb { flex-basis: 30px; } }
 
 /* first-run hint: key chips instead of a long sentence */
-.rv2-tip { gap: 12px; flex-wrap: nowrap; overflow: hidden; font-size: 12.5px; padding: 5px 8px 5px 12px; background: var(--work-a); border: 1px solid rgba(127,168,255,.25); }
+.rv2-tip { gap: 12px; flex-wrap: nowrap; overflow: hidden; font-size: 12.5px; padding: 5px 8px 5px 12px; background: var(--work-a); border: 1px solid color-mix(in srgb, var(--work) 25%, transparent); }
 .rv2-tip > b { color: var(--blue); flex: none; }
 .rv2-tip .tchip { display: inline-flex; gap: 6px; align-items: center; white-space: nowrap; color: var(--t2); flex: none; }
 .rv2-tip kbd .i { width: 13px; height: 13px; vertical-align: -2px; }
@@ -411,14 +411,14 @@
 
 /* transport: a bigger, coloured play button; "Add note" stands out */
 .rv2-transport { height: 44px; padding: 0 8px; gap: 4px; border: 1px solid var(--line); }
-.rv2-transport .play { width: 36px; height: 36px; border-radius: 50%; background: var(--t1); color: #0b0c0e; font-size: 14px; margin: 0 4px; transition: transform var(--dur) var(--ease), background var(--dur) var(--ease); }
+.rv2-transport .play { width: 36px; height: 36px; border-radius: 50%; background: var(--t1); color: var(--accent-ink); font-size: 14px; margin: 0 4px; transition: transform var(--dur) var(--ease), background var(--dur) var(--ease); }
 .rv2-transport .play .i { width: 17px; height: 17px; vertical-align: 0; }
 .rv2-transport .play:hover { background: #fff; transform: scale(1.04); }
 .rv2-transport .tbtn { height: 30px; border-radius: 7px; background: transparent; border-color: transparent; color: var(--t2); }
 .rv2-transport .tbtn:hover { background: var(--s3); color: var(--t1); }
 .rv2-transport .tbtn .i { vertical-align: -3px; }
 .rv2-transport .tp-note { background: var(--accent-a); color: var(--accent); border-color: var(--accent-b); font-weight: 600; }
-.rv2-transport .tp-note:hover { background: rgba(255,122,69,.2); border-color: var(--accent); color: var(--accent); }
+.rv2-transport .tp-note:hover { background: color-mix(in srgb, var(--accent) 20%, transparent); border-color: var(--accent); color: var(--accent); }
 .rv2-transport .tc { height: 30px; border-radius: 7px; border-color: var(--line); }
 
 /* side panel: bigger tabs; the sound tab is a stack of cards */
