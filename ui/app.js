@@ -5,7 +5,7 @@ import { reviewPage } from './review.js';
 import { outputsPanel, outputActions } from './outputs-panel.js';
 import { activeRenders, elapsedSeconds, timeText, remainingText } from './render-status.js';
 import { NOTE_STATUS_LABEL, NOTE_KIND_LABEL, PROJECT_STATUS_LABEL } from './values.js';
-import { icon, ic } from './icons.js';
+import { icon, ic, logo } from './icons.js';
 import { initShell, shellRoute, shellFilm, forgetFilm, shellActivity, shellChannel, filmChannel, openAgentDrawer } from './shell.js';
 import { planPage } from './plan.js';
 import { nowPage } from './now.js';
@@ -14,6 +14,7 @@ import { openFinishDialog, openFinishAll } from './finish.js';
 import { skillsPage } from './skills.js';
 import { remotionPanel } from './remotion.js';
 import { chatsPanel } from './chats.js';
+import { LANGS, uiLang, setUiLang, startTranslator } from './i18n.js';
 import { initLeftovers, headline, ruleLine } from './leftovers.js';
 import { workingFilms } from './activity-view.js';
 initShell();   // the rail and top bar exist before anything below writes into them
@@ -197,6 +198,7 @@ async function render() {
 }
 const agentReady = api('/api/config').then(c => { setAgentName(c.agentName); setSystemCapabilities(c.capabilities); }).catch(() => {});
 window.addEventListener('hashchange', render);
+startTranslator();
 render().finally(() => setTimeout(() => { loadActivity(); initLeftovers(); }, 0));
 
 // ---------- first run: no projects yet → where films go, the example film, adding a folder
@@ -803,6 +805,7 @@ async function settingsPage(page) {
   const [c, gs] = await Promise.all([api('/api/config'), api('/api/guard/settings').catch(() => null)]);
   setSystemCapabilities(c.capabilities);
   page.append(h('div', { class: 'page-head' }, h('div', {}, h('h1', {}, 'Settings'), h('p', { class: 'sub' }, 'Settings for this computer.'))));
+  if (typeof settingsExtras === 'function') settingsExtras(page);   // interface language and About (below; absent in the settings test)
   // ---- render protection (RenderGuard runs in the background; the same panel is on the Renders page)
   if (gs) page.append(h('h2', {}, 'Render protection'), guardPanel(gs, { full: true }));
   // ---- projects removed from the list ("Remove from list"), with their folders untouched
@@ -951,4 +954,17 @@ async function openImportDialog() {
         h('div', { class: 'imp-meta dim' }, `last used ${AGO(p.lastActive)} · ${p.sessions} session${p.sessions === 1 ? '' : 's'}`)),
       btn);
   }));
+}
+
+// Settings: the interface language (English / Russian) and who made VideoSpawner
+const AUTHOR = { name: 'arkentikov', telegram: 'https://t.me/arkentikov', youtube: 'https://www.youtube.com/@ArsenEcom-x9j' };
+function settingsExtras(page) {
+  const lang = h('select', { 'aria-label': 'Interface language', onchange: e => setUiLang(e.target.value) }, Object.entries(LANGS).map(([v, l]) => h('option', { value: v, selected: v === uiLang() }, l)));
+  const link = (href, text) => h('a', { href, target: '_blank', rel: 'noopener noreferrer' }, text);
+  page.append(
+    h('h2', {}, 'Interface language'), h('div', { class: 'row' }, lang),
+    h('h2', {}, 'About VideoSpawner'),
+    h('div', { class: 'panel about-panel' },
+      h('div', { class: 'about-name' }, logo(36), h('div', {}, h('b', {}, 'VideoSpawner'), h('div', { class: 'dim' }, 'by ', h('b', { 'data-no-tr': '' }, AUTHOR.name)))),
+      h('div', { class: 'row about-links' }, link(AUTHOR.telegram, 'Telegram · @arkentikov'), link(AUTHOR.youtube, 'YouTube · @ArsenEcom'), link('https://github.com/KrArsen/VideoSpawner', 'GitHub'))));
 }

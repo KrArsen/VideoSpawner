@@ -2,7 +2,9 @@
   "name": "videospawner",
   "version": "0.1.0",
   "private": true,
-  "description": "Local cross-platform review studio and protected render queue for videos written as code by Claude Code or OpenCode.",
+  "description": "Local studio for videos made as code by Claude Code: live drafts without rendering (also Remotion), notes on frames copied to the chat, a protected render queue.",
+  "author": "arkentikov (https://t.me/arkentikov)",
+  "homepage": "https://github.com/KrArsen/VideoSpawner",
   "license": "MIT",
   "keywords": [
     "claude",
