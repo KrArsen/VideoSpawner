@@ -12,7 +12,7 @@ function router(hash, over = {}) {
   const location = { hash, replace(h) { calls.push('replace ' + h); this.hash = h; } };
   const page = name => async () => { calls.push(name); return () => cleaned.push(name); };
   const ctx = { location, agentReady: Promise.resolve(), shellRoute() { }, $: () => ({ innerHTML: '', append() { } }), h: () => ({ append() { } }) };
-  for (const n of ['nowPage', 'skillsPage', 'templatesPage', 'filesPage', 'planPage', 'outputsPage', 'projectsPage', 'projectPage', 'reviewPage', 'rendersPage', 'diskPage', 'settingsPage']) ctx[n] = page(n);
+  for (const n of ['nowPage', 'skillsPage', 'filesPage', 'planPage', 'outputsPage', 'projectsPage', 'projectPage', 'reviewPage', 'rendersPage', 'diskPage', 'settingsPage']) ctx[n] = page(n);
   Object.assign(ctx, typeof over === 'function' ? over(ctx, page) : over);
   vm.createContext(ctx); vm.runInContext(routerCode + '\nglobalThis.go = render;', ctx);
   return { go: (...a) => ctx.go(...a), calls, cleaned, location };

@@ -12,7 +12,6 @@ import { nowPage } from './now.js';
 import { filesPage } from './files.js';
 import { openFinishDialog, openFinishAll } from './finish.js';
 import { skillsPage } from './skills.js';
-import { templatesPage } from './templates.js';
 import { initLeftovers, headline, ruleLine } from './leftovers.js';
 import { workingFilms } from './activity-view.js';
 initShell();   // the rail and top bar exist before anything below writes into them
@@ -177,7 +176,7 @@ function updateLive() {
 }
 
 // ---------- router
-const pages = { now: nowPage, skills: skillsPage, templates: templatesPage, files: filesPage, plan: planPage, outputs: outputsPage, projects: projectsPage, p: projectPage, review: reviewPage, renders: rendersPage, disk: diskPage, settings: settingsPage };
+const pages = { now: nowPage, skills: skillsPage, files: filesPage, plan: planPage, outputs: outputsPage, projects: projectsPage, p: projectPage, review: reviewPage, renders: rendersPage, disk: diskPage, settings: settingsPage };
 let cleanup = null, renderGen = 0;
 async function render() {
   await agentReady;
@@ -246,8 +245,7 @@ async function projectsPage(page) {
     h('input', { type: 'search', placeholder: 'Search films', value: state.q, oninput: e => { state.q = e.target.value; draw(); } }));
   page.append(h('div', { class: 'page-head' }, h('div', {}, h('h1', {}, 'Films'), sub), h('span', { class: 'spacer' }), search,
     h('button', { title: 'Look for new and changed films in the watched folders', onclick: async () => { markUserScan(); await api('/api/scan', { method: 'POST' }); toast('Scan started…'); } }, ic('refresh', 'Rescan')),
-    importButton(),
-    h('button', { class: 'primary', title: 'Make a video from a ready template: pick it, choose the language, type your text', onclick: () => location.hash = '#/templates' }, ic('plus', 'New from template'))));
+    importButton()));
   const data = await api('/api/projects');
   const ps = data.projects;
   const total = ps.reduce((s, p) => s + (p.sizes?.total || 0), 0);

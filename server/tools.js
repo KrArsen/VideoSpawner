@@ -104,7 +104,6 @@ export function inboxText(p, items) {
     else if (it.type === 'scene-approved') lines.push('', `The user approved scene ${it.n} "${it.title}" (plan v${it.v}). Leave it as it is.`);
   }
   if (notes.length) lines.push(...noteAdvice(notes));
-  if (p.path && fs.existsSync(path.join(p.path, 'film.data.js'))) lines.push('', 'Template film: change only film.data.js (texts, dur, theme), with small edits. Do not read engine.js or render.js.');
   lines.push('', 'Then call hub_wait again. No render unless asked.');
   return lines.join('\n');
 }
@@ -130,31 +129,6 @@ export const TOOLS = {
         'Next: tell the user in 1 sentence (their language) to watch it and press "Send to agent"; then call hub_wait. Fix notes in code, hub_note_update, hub_wait again. Render only if asked.',
         li.durFrom === 'default' ? 'The film length is unknown (60 s assumed): save it with hub_project({set:{render:{env:{DUR:"…"}}}}).' : '',
       ].filter(Boolean).join('\n');
-    },
-  },
-  hub_template: {
-    description: 'Cheapest way to make a video: a film from a ready template, as data (no code to write). Without "template" it lists the templates, scene types, themes and languages. With it, it makes the film folder (index.html + engine.js + film.data.js + render.js + music) and returns its path; then call hub_live. To change the film later, edit only film.data.js. Use it whenever the request fits a template (explainer, list/top-N, quote, numbers, announcement) or the user asks for one.',
-    schema: {
-      template: z.string().optional().describe('Template id (call without it to list them)'),
-      name: z.string().optional().describe('Film title (also the folder name)'),
-      lang: z.string().optional().describe('uk | en | ru | pl: language of the sample text'),
-      format: z.string().optional().describe('16:9 | 9:16 | 1:1'),
-      theme: z.string().optional().describe('spawn | chalk | neon | ocean | sunset'),
-      music: z.string().optional().describe('pad | pulse | none'),
-      scenes: z.array(z.record(z.string(), z.any())).optional().describe('Your scenes [{type, dur, ...fields}]; omit to use the template\'s sample text'),
-    },
-    run: async a => {
-      if (!a.template) {
-        const c = await call('GET', '/api/templates?lang=' + encodeURIComponent(a.lang || 'en'));
-        return [
-          'Templates: ' + c.templates.map(t => `${t.id} (${t.format}, ${t.scenes.map(s => s.type).join('+')}): ${t.desc}`).join(' | '),
-          'Scene types and fields: ' + Object.entries(c.sceneTypes).map(([k, v]) => `${k}{${Object.keys(v.fields).join(',')}}`).join(' '),
-          'Themes: ' + Object.keys(c.themes).join(', ') + '. Languages: ' + Object.keys(c.languages).join(', ') + '. Music: ' + Object.keys(c.music).join(', ') + '. Formats: ' + Object.keys(c.formats).join(', ') + '.',
-          'Every scene has dur (seconds). list.items is an array of short lines; stat.value is a number.',
-        ].join('\n');
-      }
-      const r = await call('POST', '/api/templates/create', { template: a.template, name: a.name, lang: a.lang, format: a.format, theme: a.theme, music: a.music, scenes: a.scenes });
-      return `Film made: "${r.title}" · ${r.format} · ${r.scenes} scenes · ${r.seconds} s\nFolder: ${r.path}\nNext: hub_live({project: ${JSON.stringify(r.path)}}). To change it, edit only film.data.js there.`;
     },
   },
   hub_workspace: {
