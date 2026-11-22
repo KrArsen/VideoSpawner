@@ -40,6 +40,7 @@ function harness(platform = {}) {
     writeJson() {}, config: () => ({ maxParallelRenders: maxParallel, render: { encoder } }), ENCODERS, LABELS, PROBE_ORDER, encoderEnv, project: id => projects.get(id),
     guardState: () => guard, guardTrack: () => { }, guardUntrack: () => { }, ramHogsNow: async () => [], ramNote: () => null,
     vhDir: p => path.join(p.path, '.videospawner'), listNotes: () => [], updateNote() {},
+    isRemotion: () => false, renderCommand: () => null,
     linkOutput: () => null, rescanProject: async () => {}, now: () => new Date().toISOString(),
     pLimit: async (items, n, fn) => Promise.all(items.map(fn)), pickFolderWin() {},
     HUB_DIR: base, audioOf: p => { const f = path.join(p.path, 'audio', 'mix.wav'); return files.has(f) ? f : null; }, refersToHub: s => refersToHub(s, base), isInside,   // the film's own mix, when the test put one there

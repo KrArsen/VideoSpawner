@@ -167,7 +167,9 @@ export function renderCommand(p) {
   const meta = readMeta(metaFile(p), {}), comp = meta.remotion?.composition; if (!comp) throw bad('Choose a composition first.');
   const entry = meta.remotion.entry || entryOf(p.path), stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
   const out = `out/${comp}-${stamp}.mp4`;
-  return { cmd: `npx remotion render "${entry}" ${comp} "${out}"`, output: out };
+  // the system browser, so the first render does not download Remotion's own Chrome
+  const br = findBrowser()?.path, browser = br ? ` --browser-executable="${br}"` : '';
+  return { cmd: `npx remotion render "${entry}" ${comp} "${out}"${browser}`, output: out };
 }
 
 export function routes(route, readBody, { project, createJob, approveJob }) {

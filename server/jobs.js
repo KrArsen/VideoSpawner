@@ -14,6 +14,7 @@ import { ramHogsNow, ramNote } from './ramhogs.js';
 import { vhDir, list as listNotes, update as updateNote } from './notes.js';
 import { DATA_DIR, HUB_DIR, readJson, writeJson, run, TOOLS, now, pLimit, refersToHub, isInside, autoWorkers } from './util.js';
 import { audioOf } from './live.js';
+import { isRemotion, renderCommand } from './remotion.js';
 import { ENCODERS, LABELS, PROBE_ORDER, encoderEnv } from './encoders.js';
 import { killTree, shellCommand, renderSpawnOptions, findBrowser } from './platform.js';
 
@@ -78,7 +79,9 @@ const merge = rs => { const s = rs.slice().sort((a, b) => a[0] - b[0]), o = []; 
 export async function create(body) {
   const p = project(body.project); if (!p) throw Object.assign(new Error('Project not found: ' + body.project), { code: 404 });
   const rc = await recipe(p);
-  const mode = body.mode || 'partial';
+  let mode = body.mode || 'partial', remotionCmd = null;
+  // a Remotion project has no render.js: its Render button runs Remotion's own renderer for the chosen composition
+  if (mode !== 'command' && isRemotion(p.path)) { remotionCmd = renderCommand(p); mode = 'command'; body = { ...body, cmd: remotionCmd.cmd, output: remotionCmd.output }; }
   if (!['partial', 'full', 'preview', 'command'].includes(mode)) throw Object.assign(new Error('mode: partial | full | preview | command'), { code: 400 });
   const workers = +(body.workers ?? rc.workers ?? 1);
   if (!Number.isInteger(workers) || workers < 1 || workers > (p.studio ? 4 : 8)) throw Object.assign(new Error('Invalid number of render workers.'), { code: 400 });
@@ -96,13 +99,13 @@ export async function create(body) {
     if (!body.cmd) throw Object.assign(new Error('mode "command" needs cmd'), { code: 400 });
     job.cmd = body.cmd; job.output = body.output || null;
     // a custom command is any command line: it waits in the queue until the user approves it on the Renders page
-    if (config().render?.confirmCommands !== false) { job.needsApproval = true; job.waiting = APPROVAL; }
+    if (!remotionCmd && config().render?.confirmCommands !== false) { job.needsApproval = true; job.waiting = APPROVAL; }
   } else if (mode === 'preview') {
     if (p.studio) throw Object.assign(new Error('3D scenes have no preview render; the live preview (hub_live) shows them without rendering.'), { code: 400 });
     job.env.PREVIEW = '1';
   }
   job.dur = +rc.env.DUR || null;
-  if (body.copyTo && mode !== 'command') {
+  if (body.copyTo && (mode !== 'command' || remotionCmd)) {
     if (!path.isAbsolute(String(body.copyTo))) throw Object.assign(new Error('The copy folder must be a full path (e.g. D:\\Videos)'), { code: 400 });
     job.copyTo = path.resolve(String(body.copyTo));
   }
