@@ -4,6 +4,7 @@ import fsp from 'node:fs/promises';
 import { dirs, TOOLS, pathKey, casePath } from './platform.js';
 export { TOOLS } from './platform.js';
 import path from 'node:path';
+import os from 'node:os';
 import crypto from 'node:crypto';
 import { spawn, execFile } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -133,3 +134,10 @@ export function processAlive(pid) { try { process.kill(pid, 0); return true; } c
 
 export const fmtGB = b => (b / 1073741824).toFixed(b >= 10 * 1073741824 ? 0 : 1) + ' GB';
 export const now = () => new Date().toISOString();
+
+// how many render workers (one headless browser each) a chunked film gets when its recipe does not say. Measured on a
+// 12-thread laptop (Ryzen 5 5600H, 14 GB) rendering a template film: 1 worker 12.5 fps, 2 workers 17 fps, 3 workers
+// 13.9, 4 workers 14.3: past two, the browsers fight over memory bandwidth. A third helps only on big desktops.
+export function autoWorkers(cores = (typeof os.availableParallelism === 'function' ? os.availableParallelism() : os.cpus().length)) {
+  return cores >= 16 ? 3 : 2;
+}

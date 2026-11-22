@@ -12,6 +12,7 @@ import { nowPage } from './now.js';
 import { filesPage } from './files.js';
 import { openFinishDialog, openFinishAll } from './finish.js';
 import { skillsPage } from './skills.js';
+import { templatesPage } from './templates.js';
 import { initLeftovers, headline, ruleLine } from './leftovers.js';
 import { workingFilms } from './activity-view.js';
 initShell();   // the rail and top bar exist before anything below writes into them
@@ -176,7 +177,7 @@ function updateLive() {
 }
 
 // ---------- router
-const pages = { now: nowPage, skills: skillsPage, files: filesPage, plan: planPage, outputs: outputsPage, projects: projectsPage, p: projectPage, review: reviewPage, renders: rendersPage, disk: diskPage, settings: settingsPage };
+const pages = { now: nowPage, skills: skillsPage, templates: templatesPage, files: filesPage, plan: planPage, outputs: outputsPage, projects: projectsPage, p: projectPage, review: reviewPage, renders: rendersPage, disk: diskPage, settings: settingsPage };
 let cleanup = null, renderGen = 0;
 async function render() {
   await agentReady;
@@ -244,7 +245,9 @@ async function projectsPage(page) {
   const search = h('label', { class: 'search', title: 'Search by name or folder' }, icon('search'),
     h('input', { type: 'search', placeholder: 'Search films', value: state.q, oninput: e => { state.q = e.target.value; draw(); } }));
   page.append(h('div', { class: 'page-head' }, h('div', {}, h('h1', {}, 'Films'), sub), h('span', { class: 'spacer' }), search,
-    h('button', { title: 'Look for new and changed films in the watched folders', onclick: async () => { markUserScan(); await api('/api/scan', { method: 'POST' }); toast('Scan started…'); } }, ic('refresh', 'Rescan'))));
+    h('button', { title: 'Look for new and changed films in the watched folders', onclick: async () => { markUserScan(); await api('/api/scan', { method: 'POST' }); toast('Scan started…'); } }, ic('refresh', 'Rescan')),
+    importButton(),
+    h('button', { class: 'primary', title: 'Make a video from a ready template: pick it, choose the language, type your text', onclick: () => location.hash = '#/templates' }, ic('plus', 'New from template'))));
   const data = await api('/api/projects');
   const ps = data.projects;
   const total = ps.reduce((s, p) => s + (p.sizes?.total || 0), 0);
@@ -898,5 +901,20 @@ export function folderButton(getStart, onPick, title = 'Choose folder', label = 
     catch (err) { toast('Could not open folder dialog: ' + err.message, true); }
     finally { b.disabled = false; b.replaceChildren(...old); }
   } }, ic('folder', label));
+  return b;
+}
+
+// "Import project": a folder you already have (one film, a folder of films, finished videos or a Remotion project)
+// becomes a watched folder of the right type; the server decides which and says what it added
+function importButton() {
+  const b = folderButton(() => '', async (folder) => {
+    try {
+      const r = await api('/api/import', { method: 'POST', body: { path: folder } });
+      toast(r.message + (r.added ? ' Scanning…' : ''));
+      if (r.added) markUserScan();
+    } catch (err) { toast('Could not import: ' + err.message, true); }
+  }, 'Choose a project folder to import', 'Import project');
+  b.classList.remove('ghost');
+  b.title = 'Add a project you already have: a film folder, a folder of films, a Remotion project or a folder of videos';
   return b;
 }

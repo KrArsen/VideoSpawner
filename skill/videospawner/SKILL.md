@@ -17,6 +17,7 @@ unless the user asks for one (then use `hub_plan`, section 1).
 
 | Tool | Use |
 |---|---|
+| `hub_template({template?, name?, lang?, format?, theme?, music?, scenes?})` | A film from a ready template, as data. No `template` = the list of templates, scene types, themes, languages. With it: makes the film folder and returns its path; then `hub_live`. |
 | `hub_plan({project?, summary?, scenes?, built?})` | Only when the user asks to see or approve a plan first: the plan as scene cards (`{title, seconds, narration, note?}`) on the film's Plan tab. A call with `scenes` saves a new version and resets approvals; `built:[2,3]` marks scenes as built. Never call it on your own. |
 | `hub_ask({project?, question, options?, recommended?})` | A question the user answers by clicking in VideoSpawner (options `{label, detail?, image?}`; `image` = a picture inside the film folder). Use it for visual choices instead of asking in the chat. Returns at once; the answer comes through `hub_wait`. |
 | `hub_wait({project?, seconds?})` | Wait for the user instead of ending your turn. Returns as soon as they send notes, answer a question, approve the plan or a scene, or comment on a scene; each thing comes once. "Nothing from the user yet" = call it again. |
@@ -35,6 +36,22 @@ unless the user asks for one (then use `hub_plan`, section 1).
 `node "{{VIDEOSPAWNER_DIR}}/server/cli.js" <tool> "<json>"`, e.g.
 `node "{{VIDEOSPAWNER_DIR}}/server/cli.js" hub_live "{\"project\":\"/home/me/film\"}"`. The tools start the hub
 themselves when it is not running.
+
+## 0. Spend few tokens
+
+The user pays for every token. The cheapest film is one you do not write:
+- **Template first.** If the request fits a template (explainer, top-N list, quote, numbers, announcement; 16:9, 9:16
+  or 1:1; uk/en/ru/pl), call `hub_template()` once to see them, then `hub_template({template, name, lang, format,
+  theme, scenes})` with the user's text, then `hub_live`. Write a film's code yourself only when no template fits.
+- **Template films: edit only `film.data.js`** (scene texts, `dur`, theme colours) with small Edit calls. Never read
+  or rewrite `engine.js`, `render.js` or `index.html`. If scene lengths change a lot, the music is rebuilt by
+  re-creating; otherwise leave `audio/mix.wav`.
+- **Notes:** read the close-up picture only; open the full frame only when the close-up is not enough. Never render,
+  screenshot or make contact sheets to find or check a moment: the note gives time, frame and chunk.
+- **Code films:** change the lines a note is about with Edit; do not re-read whole files you already read in this
+  session, do not re-review the whole film, and keep replies to the user to 1–2 sentences.
+- **Renders:** `mode:"partial"` after notes on a rendered version (only the touched 2-second chunks). Never a full
+  render to check something.
 
 ## 1. The user asks for a video → build it (a plan only on request)
 

@@ -12,7 +12,7 @@ import { project, rescanProject } from './scan.js';
 import { guardState, guardTrack, guardUntrack } from './guard.js';
 import { ramHogsNow, ramNote } from './ramhogs.js';
 import { vhDir, list as listNotes, update as updateNote } from './notes.js';
-import { DATA_DIR, HUB_DIR, readJson, writeJson, run, TOOLS, now, pLimit, refersToHub, isInside } from './util.js';
+import { DATA_DIR, HUB_DIR, readJson, writeJson, run, TOOLS, now, pLimit, refersToHub, isInside, autoWorkers } from './util.js';
 import { audioOf } from './live.js';
 import { ENCODERS, LABELS, PROBE_ORDER, encoderEnv } from './encoders.js';
 import { killTree, shellCommand, renderSpawnOptions, findBrowser } from './platform.js';
@@ -50,7 +50,8 @@ export async function recipe(p) {
   // a 2D studio scene (film2d, Canvas2D) waits on the GPU, not on its work: 3 Chrome copies render it 19 % faster than 2
   // (measured on a 7-minute 2D film: 30.5 -> 36.3 fps; 4 copies 37.7). 3D scenes stay at 2.
   const is2d = () => { try { return /film2d/.test(fs.readFileSync(path.join(p.path, 'scene.js'), 'utf8')); } catch { return false; } };
-  const r = { workers: p.studio ? (is2d() ? 3 : 2) : 1, env: {}, ...(meta.render || {}) };
+  // a chunked film renders its chunks in parallel: a worker count from this PC's processors (was 1 when not set)
+  const r = { workers: p.studio ? (is2d() ? 3 : 2) : p.family === 'A' ? autoWorkers() : 1, env: {}, ...(meta.render || {}) };
   r.script = r.script || p.render?.script || 'render.js';
   r.fps = r.fps || p.render?.fps || 60;
   r.chunkFrames = r.chunkFrames || p.render?.chunkFrames || null;
@@ -454,7 +455,7 @@ async function renderOptions0(p) {
   let src = ''; try { src = fs.readFileSync(path.join(p.path, rc.script), 'utf8'); } catch { }
   const env = new Set([...src.matchAll(/process\.env\.([A-Z_]+)/g)].map(m => m[1]));
   return { studio: false, script: fs.existsSync(path.join(p.path, rc.script)) ? rc.script : null, partial: p.family === 'A' && !!rc.chunkSec,
-    preview: env.has('PREVIEW'), fps: env.has('FPS') ? { default: rc.fps || 30 } : null, workers: { default: rc.workers || 2, max: 8, env: env.has('WK') ? 'WK' : null }, dur: +rc.env.DUR || null,
+    preview: env.has('PREVIEW'), fps: env.has('FPS') ? { default: rc.fps || 30 } : null, workers: { default: rc.workers || autoWorkers(), max: 8, env: env.has('WK') ? 'WK' : null }, dur: +rc.env.DUR || null,
     // a script that reads VIDEOSPAWNER_ENCODER (the template's render.js) gets the encoder choice; default = Settings' choice
     ...(env.has('VIDEOSPAWNER_ENCODER') ? { codecs: ENCODERS.filter(n => n === 'auto' || n === 'x264' || PROBE_ORDER.includes(n)), codecEnv: 'VIDEOSPAWNER_ENCODER', codecDefault: rc.env.VIDEOSPAWNER_ENCODER || config().render?.encoder || 'auto', codecLabels: LABELS } : { codecs: null }) };
 }

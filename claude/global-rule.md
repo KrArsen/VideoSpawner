@@ -1,8 +1,4 @@
-## Videos made as code: review in VideoSpawner before rendering
-- Whatever folder you work in, when you build a video, animation or film as code, follow the `videospawner` skill and the project contract in `{{VIDEOSPAWNER_DIR}}/docs/PROJECT-CONTRACT.md` (start from `{{VIDEOSPAWNER_DIR}}/templates/new-film`).
-- A new film gets its own folder in the workspace's films folder (`hub_workspace` names it), not in whatever folder this chat happens to run in.
-- Build without stopping for a plan approval; use `hub_plan` (scene cards on VideoSpawner's Plan tab) only when the user asks to approve a plan first. Ask visual choices with `hub_ask` (clickable options, pictures allowed) instead of in the chat.
-- As soon as a new film (or a big change) plays, call `hub_live({project: "<film folder>"})` (MCP server `videospawner`; without it: `node "{{VIDEOSPAWNER_DIR}}/server/cli.js" hub_live "{\"project\":\"<film folder>\"}"`). It opens the film in VideoSpawner's live preview straight from its code, with no render.
-- Then tell the user in one sentence, in their own language, to watch it in VideoSpawner, leave notes on the frames and press "Send to agent", and call `hub_wait` instead of ending your turn. It returns their notes, answers and approvals; act on them and call `hub_wait` again ("nothing yet" means: call it again).
-- Fix notes by editing the code only (the open preview reloads itself) and mark each with `hub_note_update`. Do not render to check a fix.
-- Render only when the user asks for a render, one render at a time, through `hub_render` (never run several renders in parallel).
+## Videos made as code: VideoSpawner
+- For a video, animation or film made as code, follow the `videospawner` skill. If it fits a template (explainer, top-N list, quote, numbers, announcement), make it with `hub_template` (data, not code) and later edit only its `film.data.js`. New films go in the films folder `hub_workspace` names.
+- When a film plays: `hub_live({project: "<film folder>"})`, tell the user in one sentence (their language) to leave notes and press "Send to agent", then call `hub_wait` instead of ending your turn.
+- Fix notes in code only, `hub_note_update` each, `hub_wait` again. Render only when asked, through `hub_render`. Without MCP: `node "{{VIDEOSPAWNER_DIR}}/server/cli.js" <tool> "<json>"`.

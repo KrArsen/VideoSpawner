@@ -117,7 +117,7 @@ const AGENT_GLYPH = {
   claude: '<g stroke="#e08a5f" stroke-width="2.4" stroke-linecap="round" fill="none"><path d="M12 3.5v17M3.5 12h17M6 6l12 12M18 6L6 18"/></g>',
   codex: '<path d="M12 3l7.8 4.5v9L12 21l-7.8-4.5v-9z" fill="none" stroke="#e8eaee" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="#e8eaee"/>',
   opencode: '<path d="M9 5H5v14h4M15 5h4v14h-4" fill="none" stroke="#9fd3ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>',
-  shared: '<g fill="none" stroke="#52d39b" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="12" r="3"/><circle cx="17" cy="6.5" r="3"/><circle cx="17" cy="17.5" r="3"/><path d="M9.7 10.6l4.6-2.6M9.7 13.4l4.6 2.6"/></g>',
+  shared: '<g fill="none" stroke="#22d37f" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="12" r="3"/><circle cx="17" cy="6.5" r="3"/><circle cx="17" cy="17.5" r="3"/><path d="M9.7 10.6l4.6-2.6M9.7 13.4l4.6 2.6"/></g>',
 };
 export function agentIcon(agent, size = 16) {
   const s = document.createElementNS(NS, 'svg');
@@ -131,6 +131,6 @@ export function agentIcon(agent, size = 16) {
 export function logo(size = 34) {
   const s = document.createElementNS(NS, 'svg');
   s.setAttribute('viewBox', '0 0 128 128'); s.setAttribute('width', size); s.setAttribute('height', size); s.setAttribute('aria-hidden', 'true');
-  s.innerHTML = '<rect width="128" height="128" rx="26" fill="#0f2a1f"/><rect x="16" y="28" width="88" height="74" rx="10" fill="#1d4434"/><path d="M48 46L80 65 48 84Z" fill="#ece3c8"/><path d="M104 12l4.5 10.5L119 27l-10.5 4.5L104 42l-4.5-10.5L89 27l10.5-4.5z" fill="#52d39b"/>';
+  s.innerHTML = '<rect width="128" height="128" rx="26" fill="#0a0a0a"/><rect x="14" y="26" width="92" height="76" rx="12" fill="none" stroke="#22d37f" stroke-width="8"/><path d="M50 46L82 64 50 82Z" fill="#ffd60a"/><path d="M106 8l4.5 10.5L121 23l-10.5 4.5L106 38l-4.5-10.5L91 23l10.5-4.5z" fill="#22d37f"/>';
   return s;
 }

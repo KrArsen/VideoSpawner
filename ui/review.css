@@ -90,7 +90,7 @@
 
 /* hub sidebar in the editor: a 48 px icon strip (titles as tips); ☰ shows it whole over the page */
 
-.rv2-view { position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #12221b 0%, #060d0a 72%); border: 1px solid var(--line); border-radius: var(--r3); }
+.rv2-view { position: relative; overflow: hidden; background: radial-gradient(ellipse at 50% 45%, #141414 0%, #030303 72%); border: 1px solid var(--line); border-radius: var(--r3); }
 .rv2-view .frame { box-shadow: 0 0 0 1px rgba(255,255,255,.06), 0 18px 50px rgba(0,0,0,.6); }
 .zoombox { position: absolute; transform-origin: 0 0; display: flex; gap: 8px; }
 .frame { position: relative; background: #000; flex: none; }
@@ -233,7 +233,7 @@
 .nc .reply b { color: var(--accent); font-weight: 600; }
 .nc .acts { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .nc .acts button { padding: 2px 8px; font-size: 11.5px; border-radius: 6px; }
-.rv2-help { position: fixed; inset: 0; background: rgba(2,9,6,.66); display: grid; place-items: center; z-index: 50; }
+.rv2-help { position: fixed; inset: 0; background: rgba(0,0,0,.66); display: grid; place-items: center; z-index: 50; }
 .rv2-help .panel { width: min(640px, 92vw); max-height: 85vh; overflow: auto; }
 .rv2-help .kv { grid-template-columns: 190px 1fr; }
 
@@ -380,7 +380,7 @@
 .lib-hint { font-size: 11px; }
 
 /* ---- Nov 8 look pass: calmer, clearer controls for people who are not editors ---- */
-.vh-tip { position: fixed; z-index: 9999; max-width: 300px; padding: 6px 9px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font-size: 12.5px; line-height: 1.35; box-shadow: 0 6px 22px rgba(0,0,0,.5); pointer-events: none; white-space: normal; }
+.vh-tip { position: fixed; z-index: 9999; max-width: 300px; padding: 6px 9px; border-radius: 8px; background: var(--t1); color: #0a0a0a; font-size: 12.5px; line-height: 1.35; box-shadow: 0 6px 22px rgba(0,0,0,.5); pointer-events: none; white-space: normal; }
 .rv2 button { transition: background-color .12s, border-color .12s, color .12s, filter .12s; }
 .rv2 button:focus-visible, .rv2 select:focus-visible, .rv2 input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .rv2 select { border-radius: 8px; }

@@ -21,12 +21,13 @@ const store = {
 // rail entries: only pages that work today
 const NAV = [
   ['projects', '#/', 'films', 'Films', 'All your films'],
+  ['templates', '#/templates', 'spark', 'Templates', 'Make a video from a ready template: pick it, choose the language, type your text'],
   ['now', '#/now', 'pulse', 'Now', 'What your agents and renders are doing now'],
   ['skills', '#/skills', 'book', 'Skills', 'The skills your agents use: their files and the films that used them'],
   ['renders', '#/renders', 'renders', 'Renders', 'Render queue and recent outputs'],
   ['disk', '#/disk', 'broom', 'Cleanup', 'Disk space and render leftovers'],
 ];
-const PAGE_TITLE = { projects: 'Films', now: 'Now', skills: 'Skills', renders: 'Renders', outputs: 'Recent renders', disk: 'Cleanup', settings: 'Settings' };
+const PAGE_TITLE = { projects: 'Films', templates: 'Templates', now: 'Now', skills: 'Skills', renders: 'Renders', outputs: 'Recent renders', disk: 'Cleanup', settings: 'Settings' };
 
 let banner = null, railFilm = null, railSep = null, tbLeft = null, tbTabs = null, tbFilmLinks = null, tbActions = null, film = null, agentPill = null, activity = null;
 // the open film's agent channel (GET /api/project/:id/channel: plan, questions, hub_wait) and who listens to it

@@ -15,6 +15,8 @@ import { guardState, guardHistory, guardCommand, snippRenders, guardSettings, sa
 import { HUB_DIR, DATA_DIR, TOOLS, isInside, readJson, writeJson, shortPath } from './util.js';
 import { readMeta, normalizeMeta } from './legacy.js';
 import * as example from './example.js';
+import * as importer from './importer.js';
+import * as templates from './templates.js';
 import * as notesApi from './notes.js';
 import * as channel from './channel.js';
 import * as jobs from './jobs.js';
@@ -482,6 +484,8 @@ route('GET', '/api/activity', async () => {
 });
 route('GET', '/api/config', () => ({ ...config(), workspace: baseDir(), capabilities: capabilities(), discovered: discoverRoots(), tools: TOOLS, example: example.info(), integrations: integrations() }));
 example.routes(route, readBody, () => scan());
+importer.routes(route, readBody, () => scan());
+templates.routes(route, readBody, () => scan());
 route('POST', '/api/config', async (req) => { const body = await readBody(req); const c = saveConfig(body); scan().catch(() => { }); if ('agentActivity' in body) refreshActivity().catch(() => { });
   if (['autoCleanPrompt', 'chunkDays', 'autoCleanMinMB'].some(k => k in body)) scanSettled().then(() => new Promise(r => setTimeout(r, 1500))).then(() => lookForLeftovers('settings'));   // the banner follows the switch
   return c; });
