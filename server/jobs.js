@@ -121,7 +121,7 @@ export async function create(body) {
 
 // ---------- run
 const APPROVAL = 'waiting for your approval in VideoSpawner (custom command)';
-let pumping = false, waitTimer = null;   // one pending retry while a render elsewhere runs (not one more 5 s chain per call)
+let pumping = false, halting = false, waitTimer = null;   // one pending retry while a render elsewhere runs (not one more 5 s chain per call)
 // wait while a render started elsewhere is actually running; renders frozen for RAM only block
 // us while free RAM is short (otherwise a forgotten frozen render would block the queue forever)
 function busyElsewhere() {
@@ -134,7 +134,7 @@ function busyElsewhere() {
   return null;
 }
 async function pump() {
-  if (pumping) return; pumping = true;
+  if (pumping || halting) return; pumping = true;
   try {
     while (true) {
       const running = executing.size;
@@ -415,6 +415,15 @@ export function cancel(id) {
   const children = [...(procs.get(id) || [])].filter(c => c.pid);
   if (children.length) stopping.set(id, Promise.allSettled(children.map(c => killTree(c.pid).catch(() => { try { c.kill(); } catch { } }))));
   j.state = 'cancelled'; j.finishedAt = now(); emit('cancelled', j); return true;
+}
+
+// stop every running render before the hub exits; queued jobs stay queued for the next start
+export async function stopRunning() {
+  halting = true;
+  if (waitTimer) { clearTimeout(waitTimer); waitTimer = null; }
+  const running = jobs.filter(j => j.state === 'running');
+  for (const j of running) cancel(j.id);
+  await Promise.allSettled([...stopping.values()]);
 }
 
 // a job that was running when the hub stopped is put back at the front of the queue

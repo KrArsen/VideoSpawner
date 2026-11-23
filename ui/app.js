@@ -52,10 +52,14 @@ export function AGO(ms) {
   return new Date(typeof ms === 'number' ? ms : Date.parse(ms)).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 export function toast(msg, err) { const el = h('div', { class: err ? 'err' : '' }, msg); $('#toast').append(el); setTimeout(() => el.remove(), err ? 7000 : 4000); }
-export function confirmBox(title, body, okText = 'OK') {
+export function confirmBox(title, body, okText = 'OK', okClass = 'primary') {
   return new Promise(res => {
-    const bg = h('div', { class: 'modal-bg' }, h('div', { class: 'modal' }, h('h1', {}, title), body,
-      h('div', { class: 'row' }, h('span', { class: 'spacer' }), h('button', { onclick: () => { bg.remove(); res(false); } }, 'Cancel'), h('button', { class: 'primary', onclick: () => { bg.remove(); res(true); } }, okText))));
+    const done = v => { bg.remove(); document.removeEventListener('keydown', onKey); res(v); };
+    const onKey = e => { if (e.key === 'Escape') done(false); };
+    const bg = h('div', { class: 'modal-bg', onclick: e => { if (e.target === bg) done(false); } },
+      h('div', { class: 'modal', role: 'dialog', 'aria-modal': 'true' }, h('h1', {}, title), body,
+        h('div', { class: 'row' }, h('span', { class: 'spacer' }), h('button', { onclick: () => done(false) }, 'Cancel'), h('button', { class: okClass, onclick: () => done(true) }, okText))));
+    document.addEventListener('keydown', onKey);
     (document.fullscreenElement || document.body).append(bg);   // in fullscreen only the fullscreen element shows
   });
 }
@@ -71,11 +75,72 @@ const statusPill = (p, auto = p.statusAuto) => pill(p.status, (PROJECT_STATUS_LA
 let rendersCache = null; const renderSubs = new Set();
 const es = new EventSource('/api/events');
 // VideoSpawner closes itself when unused; if this window outlived it, say how to bring it back (EventSource keeps retrying)
-let downTimer = null;
+let downTimer = null, stoppingHub = false, stoppedByUser = false;
 const downBar = h('div', { class: 'downbar', hidden: true }, 'The VideoSpawner server is off (it shut down because it was idle). Click the VideoSpawner shortcut on your desktop; this window will reconnect automatically.');
 document.body.append(downBar);
-es.addEventListener('error', () => { if (!downTimer) downTimer = setTimeout(() => { downBar.hidden = false; }, 4000); });
+es.addEventListener('error', () => { if (!stoppedByUser && !downTimer) downTimer = setTimeout(() => { if (!stoppedByUser) downBar.hidden = false; }, 4000); });
 es.addEventListener('open', () => { clearTimeout(downTimer); downTimer = null; if (!downBar.hidden) location.reload(); });
+es.addEventListener('shutdown', () => markStoppedByUser());
+function markStoppedByUser() {
+  if (stoppedByUser) return;
+  stoppedByUser = true;
+  clearTimeout(downTimer); downTimer = null;
+  es.close();
+  document.querySelectorAll('#stopHub, [data-stop-hub]').forEach(b => { b.disabled = true; });
+  const live = $('#live');
+  if (live) { live.classList.remove('on'); live.replaceChildren(icon('power'), h('span', { class: 'txt' }, 'Stopped')); live.title = 'VideoSpawner has stopped'; }
+  downBar.classList.add('stopped');
+  downBar.replaceChildren(
+    h('span', {}, 'VideoSpawner has stopped. You can close this window, or start VideoSpawner again from your shortcut.'),
+    h('button', { class: 'sm', onclick: () => location.reload() }, 'Reconnect'),
+  );
+  downBar.hidden = false;
+}
+async function stopVideoSpawner() {
+  if (stoppingHub || stoppedByUser) return;
+  stoppingHub = true;
+  try {
+    const st = await api('/api/shutdown').catch(() => null);
+    if (!st) { toast('VideoSpawner is already offline.', true); return; }
+    const notes = [];
+    if (st.running) notes.push('Active queue renders will be cancelled; queued renders stay in the queue for next time.');
+    if (st.cleanup) notes.push('The running cleanup may be left unfinished.');
+    notes.push('Stopping now turns off the local VideoSpawner server and its render protection.');
+    const body = h('div', { class: 'stop-body' },
+      st.busy
+        ? [
+            h('p', { class: 'stop-warn' }, ic('warn', 'Work is in progress right now:')),
+            h('ul', { class: 'stop-list' }, st.reasons.map(r => h('li', {}, r))),
+            ...notes.map(t => h('p', { class: 'sub' }, t)),
+          ]
+        : h('p', { class: 'sub' }, 'This stops the local VideoSpawner server and its render protection. You can start it again anytime from the VideoSpawner shortcut or your agent.'),
+    );
+    const ok = await confirmBox('Stop VideoSpawner?', body, st.busy ? 'Stop anyway' : 'Stop VideoSpawner', 'danger');
+    if (!ok) return;
+    try {
+      await api('/api/shutdown', { method: 'POST', body: { force: !!st.busy } });
+      markStoppedByUser();
+    } catch (err) {
+      if (!st.busy && /busy/i.test(err.message)) {
+        const forceOk = await confirmBox('Stop VideoSpawner?',
+          h('div', { class: 'stop-body' }, h('p', { class: 'stop-warn' }, ic('warn', err.message)), h('p', { class: 'sub' }, 'Stop VideoSpawner anyway?')),
+          'Stop anyway', 'danger');
+        if (!forceOk) return;
+        try {
+          await api('/api/shutdown', { method: 'POST', body: { force: true } });
+          markStoppedByUser();
+        } catch (err2) {
+          toast('Could not stop VideoSpawner: ' + err2.message, true);
+        }
+      } else {
+        toast('Could not stop VideoSpawner: ' + err.message, true);
+      }
+    }
+  } finally {
+    stoppingHub = false;
+  }
+}
+$('#stopHub')?.addEventListener('click', stopVideoSpawner);
 // no pop-up messages for things the user did not just do: lists and badges update silently
 let userScan = false, uiVersion = null, reloadPending = false;
 export const markUserScan = () => { userScan = true; };
@@ -144,7 +209,7 @@ function refreshNewCount(n) {
   api('/api/outputs?limit=1').then(r => set(r.unseen)).catch(() => { });
 }
 window.__vhNewCount = refreshNewCount;
-refreshNewCount(); setInterval(() => refreshNewCount(), 60000);
+refreshNewCount(); setInterval(() => { if (!stoppedByUser) refreshNewCount(); }, 60000);
 // Claude asked to show a page (hub_live): go there, unless a note is being written
 es.addEventListener('navigate', e => {
   let d = null; try { d = JSON.parse(e.data); } catch { } if (!d?.hash || location.hash === d.hash) return;
@@ -152,7 +217,7 @@ es.addEventListener('navigate', e => {
   location.hash = d.hash; try { window.focus(); } catch { }
 });
 // new projects from other chats: rescan when the window comes back to the front (the hub skips it if it scanned < 1 min ago)
-const softScan = () => { if (document.visibilityState === 'visible') fetch('/api/scan?soft=1', { method: 'POST' }).catch(() => { }); };
+const softScan = () => { if (!stoppedByUser && document.visibilityState === 'visible') fetch('/api/scan?soft=1', { method: 'POST' }).catch(() => { }); };
 window.addEventListener('focus', softScan); document.addEventListener('visibilitychange', softScan);
 // redraw the project list after a scan, unless the user is typing in it; keep the scroll position
 async function refreshProjectList() {
@@ -966,5 +1031,6 @@ function settingsExtras(page) {
     h('h2', {}, 'About VideoSpawner'),
     h('div', { class: 'panel about-panel' },
       h('div', { class: 'about-name' }, logo(36), h('div', {}, h('b', {}, 'VideoSpawner'), h('div', { class: 'dim' }, 'by ', h('b', { 'data-no-tr': '' }, AUTHOR.name)))),
-      h('div', { class: 'row about-links' }, link(AUTHOR.telegram, 'Telegram · @arkentikov'), link(AUTHOR.youtube, 'YouTube · @ArsenEcom'), link('https://github.com/KrArsen/VideoSpawner', 'GitHub'))));
+      h('div', { class: 'row about-links' }, link(AUTHOR.telegram, 'Telegram · @arkentikov'), link(AUTHOR.youtube, 'YouTube · @ArsenEcom'), link('https://github.com/KrArsen/VideoSpawner', 'GitHub'),
+        h('button', { type: 'button', class: 'danger sm', 'data-stop-hub': '1', disabled: stoppedByUser, onclick: () => stopVideoSpawner() }, ic('power', 'Stop VideoSpawner')))));
 }

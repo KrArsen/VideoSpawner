@@ -48,6 +48,7 @@ export function initShell() {
     railFilm = el('a', 'rail-btn rail-film', { 'data-nav': 'film', hidden: true }),
     el('div', 'rail-fill'),
     el('a', 'rail-btn', { href: '#/settings', 'data-nav': 'settings', title: 'Settings' }, icon('settings'), el('span', '', {}, 'Settings')),
+    el('button', 'rail-btn rail-stop', { type: 'button', id: 'stopHub', title: 'Stop VideoSpawner server' }, icon('power'), el('span', '', {}, 'Stop')),
   );
   tbLeft = el('div', 'tb-left'); tbTabs = el('nav', 'tabs', { 'aria-label': 'Film', hidden: true }); tbFilmLinks = el('div', 'tb-filmlinks'); tbActions = el('div', 'tb-actions');
   agentPill = el('button', 'agent-pill', { type: 'button', hidden: true, 'aria-haspopup': 'dialog', 'aria-expanded': 'false' });

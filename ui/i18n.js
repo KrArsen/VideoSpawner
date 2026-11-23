@@ -54,6 +54,21 @@ const RU = {
   'Enabled': 'Вкл.', 'Remove': 'Убрать', 'Choose folder…': 'Выбрать папку…', 'Remove all': 'Убрать всё',
   // Now, skills
   'Agent sessions working now': 'Сессии агентов сейчас', 'Agent activity is off.': 'Активность агентов выключена.', 'Search skills': 'Поиск скиллов', 'Last action': 'Последнее действие',
+  // Stop VideoSpawner
+  'Stop': 'Стоп', 'Stopped': 'Остановлен', 'Reconnect': 'Переподключить',
+  'Stop VideoSpawner': 'Остановить VideoSpawner', 'Stop VideoSpawner server': 'Остановить сервер VideoSpawner',
+  'Stop VideoSpawner?': 'Остановить VideoSpawner?', 'Stop anyway': 'Остановить всё равно',
+  'Stop VideoSpawner anyway?': 'Остановить VideoSpawner всё равно?',
+  'Work is in progress right now:': 'Сейчас идёт работа:',
+  'VideoSpawner has stopped': 'VideoSpawner остановлен',
+  'VideoSpawner is already offline.': 'VideoSpawner уже остановлен.',
+  'VideoSpawner has stopped. You can close this window, or start VideoSpawner again from your shortcut.': 'VideoSpawner остановлен. Можно закрыть это окно или снова запустить VideoSpawner через ярлык.',
+  'This stops the local VideoSpawner server and its render protection. You can start it again anytime from the VideoSpawner shortcut or your agent.': 'Это остановит локальный сервер VideoSpawner и защиту рендера. Запустить его снова можно в любой момент через ярлык VideoSpawner или через агента.',
+  'Active queue renders will be cancelled; queued renders stay in the queue for next time.': 'Активные рендеры из очереди будут отменены; задачи в очереди сохранятся до следующего запуска.',
+  'The running cleanup may be left unfinished.': 'Текущая очистка может остаться незавершённой.',
+  'Stopping now turns off the local VideoSpawner server and its render protection.': 'Остановка сейчас выключит локальный сервер VideoSpawner и защиту рендера.',
+  'a cleanup is running': 'идёт очистка', 'an agent is waiting for you': 'агент ждёт тебя',
+  'note frame pictures are being cut': 'нарезаются кадры для заметок', 'a review copy is being made': 'создаётся копия для просмотра',
 };
 const RULES = [
   [/^Copy for (.+) \((\d+)\)$/, 'Скопировать для $1 ($2)'],
@@ -66,6 +81,9 @@ const RULES = [
   [/^Versions · (\d+)$/i, 'Версии · $1'], [/^VERSIONS · (\d+)$/, 'ВЕРСИИ · $1'],
   [/^Copied (\d+) notes?\. Paste into (.+) \(Ctrl\+V\) and press Enter\.$/, 'Скопировано заметок: $1. Вставь в $2 (Ctrl+V) и нажми Enter.'],
   [/^(\d+) film folders? inside$/, 'внутри папок фильмов: $1'], [/^(\d+) videos?$/, 'видео: $1'],
+  [/^(\d+) renders? (?:is|are) running$/, 'идёт рендеров: $1'],
+  [/^(\d+) renders? (?:is|are) queued$/, 'рендеров в очереди: $1'],
+  [/^(\d+) agents are waiting for you$/, 'агентов ждут тебя: $1'],
 ];
 function tr(s) {
   if (RU[s]) return RU[s];

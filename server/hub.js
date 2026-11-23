@@ -593,6 +593,51 @@ setInterval(async () => {
 // "Start with Windows" (node scripts/install.mjs open --server at log-in): the hub stays on, so the render protection runs from the start
 if (!GUARD_OFF) alwaysOn().then(on => { if (on) ensureGuard().catch(() => { }); }).catch(() => { });
 
+// ---------- explicit stop from the interface: inspect active work, then stop render protection and exit
+function shutdownStatus() {
+  const list = jobs.list();
+  const running = list.filter(j => j.state === 'running').length;
+  const queued = list.filter(j => j.state === 'queued').length;
+  const tracked = !GUARD_OFF ? (guardState().renders || []).length : 0;
+  const cleanup = cleanStatus()?.state === 'running';
+  const waits = channel.waitCount();
+  const pictures = !!notesApi.busyPictures();
+  const copies = !!media.makingCopies();
+  const reasons = [];
+  if (running) reasons.push(running === 1 ? '1 render is running' : `${running} renders are running`);
+  else if (tracked) reasons.push(tracked === 1 ? '1 render is running' : `${tracked} renders are running`);
+  if (queued) reasons.push(queued === 1 ? '1 render is queued' : `${queued} renders are queued`);
+  if (cleanup) reasons.push('a cleanup is running');
+  if (waits) reasons.push(waits === 1 ? 'an agent is waiting for you' : `${waits} agents are waiting for you`);
+  if (pictures) reasons.push('note frame pictures are being cut');
+  if (copies) reasons.push('a review copy is being made');
+  return { busy: reasons.length > 0, running, queued, tracked, cleanup, waits, reasons };
+}
+let shuttingDown = false;
+route('GET', '/api/shutdown', () => shutdownStatus());
+route('POST', '/api/shutdown', async (req) => {
+  const b = await readBody(req), st = shutdownStatus();
+  if (!b.force && st.busy) throw Object.assign(new Error('VideoSpawner is busy: ' + st.reasons.join('; ')), { code: 409 });
+  if (shuttingDown) return { ok: true, stopping: true };
+  shuttingDown = true;
+  console.log('VideoSpawner: stopped from the interface.');
+  broadcast('shutdown', { by: 'user' });
+  setTimeout(async () => {
+    const hardExit = setTimeout(() => process.exit(0), 10000); hardExit.unref();
+    try {
+      for (const res of [...clients]) { try { res.end(); } catch { } }
+      clients.clear();
+      await jobs.stopRunning().catch(() => { });
+      await new Promise(r => setTimeout(r, 50));
+      if (!GUARD_OFF) await quitGuard().catch(() => { });
+      server.close();
+    } finally {
+      process.exit(0);
+    }
+  }, 150);
+  return { ok: true, stopping: true };
+});
+
 // only this PC's own pages and tools: a page on another website (or a DNS name pointed at 127.0.0.1) must not drive
 // the hub — its job queue can run commands. Claude's MCP tools, RenderGuard and scripts send no Origin/Sec-Fetch-Site.
 const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]']);

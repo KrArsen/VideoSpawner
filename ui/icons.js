@@ -96,6 +96,7 @@ const P = {
   moon: '<path d="M19.5 14.6A8 8 0 0 1 9.4 4.5a8 8 0 1 0 10.1 10.1z"/>',
   plan: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 11h18M9 11v9M15 11v9"/>',
   more: `<circle cx="6" cy="12" r="1.5" ${F}/><circle cx="12" cy="12" r="1.5" ${F}/><circle cx="18" cy="12" r="1.5" ${F}/>`,
+  power: '<path d="M12 3.5v8"/><path d="M17.4 6.1a8 8 0 1 1-10.8 0"/>',
 };
 
 // icon('folder') → <svg class="i">; opts: { cls, size, title }
